@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #EFE7DC;
+  --color-ink: #161412;
+  --color-signal-red: #F0301A;
+  --color-photo-white: #FFFFFF;
+  --color-photo-black: #0A0A0A;
+}
+
+:root {
+  --canvas: #EFE7DC;
+  --ink: #161412;
+  --signal-red: #F0301A;
+  --white: #FFFFFF;
+  --black: #0A0A0A;
+}
+
+html, body {
+  background-color: #EFE7DC;
+  color: #F0301A;
+  font-family: var(--font-grotesk), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Zero radius rule everywhere */
+* {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Custom scrollbar matching canvas & red accent */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #EFE7DC;
+}
+::-webkit-scrollbar-thumb {
+  background: #F0301A;
+}
+
+/* Typography Helpers */
+.font-display-grotesk {
+  font-family: var(--font-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.font-editorial-serif {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+/* Hairline dividers */
+.hairline-b {
+  border-bottom: 2px solid #F0301A;
+}
+
+.hairline-t {
+  border-top: 2px solid #F0301A;
+}
+
+.hairline-l {
+  border-left: 2px solid #F0301A;
+}
+
+.hairline-r {
+  border-right: 2px solid #F0301A;
+}
+
+.hairline-all {
+  border: 2px solid #F0301A;
+}
+
+/* Sold Out Strikethrough */
+.sold-out-strike {
+  text-decoration: line-through;
+  text-decoration-color: #F0301A;
+  text-decoration-thickness: 2px;
+}
