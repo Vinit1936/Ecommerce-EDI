@@ -34,7 +34,10 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${playfairDisplay.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#EFE7DC] text-[#F0301A] font-display-grotesk selection:bg-[#F0301A] selection:text-[#EFE7DC]">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-[#EFE7DC] text-[#F0301A] font-display-grotesk selection:bg-[#F0301A] selection:text-[#EFE7DC]"
+      >
         <CartProvider>
           <Header />
           <main className="flex-grow">{children}</main>
