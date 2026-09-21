@@ -153,7 +153,15 @@ export default async function OrdersPage() {
                       ? '○ PAYMENT FAILED'
                       : '○ AWAITING PAYMENT'}
                 </div>
-                <OrderActions orderId={order.id} status={order.status} />
+                <div className="flex items-center gap-4">
+                  <Link
+                    href={`/orders/${order.id}/invoice`}
+                    className="text-xs font-bold uppercase tracking-wider text-[#F0301A] underline hover:opacity-80"
+                  >
+                    PRINT INVOICE ↗
+                  </Link>
+                  <OrderActions orderId={order.id} status={order.status} />
+                </div>
               </div>
             </div>
           ))}

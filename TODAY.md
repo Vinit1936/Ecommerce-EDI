@@ -159,14 +159,14 @@ Team 1 is on the critical path twice over: **Teams 2 and 3 cannot write a single
 - [x] **1.5 + 1.8 Products from DB** — `GET /api/products` with server-side search/filter/sort, then rewrite `shop/page.tsx` to fetch it instead of importing `MOCK_PRODUCTS`. Move the `useMemo` filter logic into the Prisma `where` clause. → **25% → 60%**, **30% → 70%**
 - [x] **1.5b PDP** — `product/[id]/page.tsx` as a server component reading the DB. Show the brand (currently never displayed anywhere). → *also proves the Brand module*
 - [x] **1.6 + 1.7 Categories & brands** — real filter chips from `GET /api/categories` / `/api/brands`, replacing the hardcoded `CATEGORIES` string array. → **20% → 60%**, **10% → 50%**
-- [ ] **1.9 Reviews** — `POST/GET /api/reviews` + a form on the PDP + average-rating badge. Schema is ready and `@@unique([productId, customerId])` gives you duplicate protection for free. Cheap, and very visible in a demo. → **10% → 60%**
+- [x] **1.9 Reviews** — `POST/GET /api/reviews` + a form on the PDP + average-rating badge. Schema is ready and `@@unique([productId, customerId])` gives you duplicate protection for free. Cheap, and very visible in a demo. → **10% → 60%**
 - [x] **1.10 Images** — seeded `imageUrl` per product is enough. **Do not build Firebase upload today.** → **0% → 40%**
 - [x] ⭐ **Delete `src/lib/mock-data.ts`.** When the site still works with that file gone, the migration is genuinely done. Grep for stragglers.
 
 ### 🟢 TEAM 2 — Cart + the real order transaction → *target 55%*
 
 - [x] **2.1 Cart in DB** — `/api/cart` CRUD against the `carts` table. Refactor `CartContext.tsx` to call the API when logged in, keep `localStorage` for guests, and merge the guest cart on login. → **35% → 80%**
-- [ ] **2.2 Wishlist** — `/api/wishlist` + a heart button on `ProductCard` + `/wishlist` page. Schema ready, ~45 min, currently a hard 0 in the UI. → **10% → 60%**
+- [x] **2.2 Wishlist** — `/api/wishlist` + a heart button on `ProductCard` + `/wishlist` page. Schema ready, ~45 min, currently a hard 0 in the UI. → **10% → 60%**
 - [x] ⭐ **2.3 + 2.10 Real order placement — the single most important task of the day.**
       Replace the `setTimeout(1200)` + `HH-2026-{random}` fake in `checkout/page.tsx` with `POST /api/orders`. This one route simultaneously satisfies **KPI #6 (concurrency)**, **KPI #7 (inventory accuracy)**, the OS subject requirement (*thread synchronisation*), and the DBMS subject requirement (*transaction management*). Build it carefully:
 
@@ -206,14 +206,14 @@ export async function placeOrder(customerId: string, items: CartLine[]) {
   Two details that matter: `ORDER BY id` on the lock prevents deadlock when two orders contain the same two products in opposite order, and `FOR UPDATE` is what actually serialises the concurrent requests. Be ready to explain both — it is exactly what an examiner will probe.
 
 - [x] **2.5 Order tracking** — `/orders` list + `/orders/[id]` detail with the `OrderStatus` timeline. → **10% → 50%**
-- [ ] **2.4 Order processing** — admin control to advance status `PENDING → CONFIRMED → SHIPPED → DELIVERED`, appending an `OrderStatus` row each time. → **5% → 50%**
+- [x] **2.4 Order processing** — admin control to advance status `PENDING → CONFIRMED → SHIPPED → DELIVERED`, appending an `OrderStatus` row each time. → **5% → 50%**
 - [x] **2.6 Cancellation** — cancel → restore stock **inside the same kind of transaction** → status `CANCELLED`. → **5% → 40%**
 - [x] **2.7 + 2.8 Inventory** — update `Inventory.quantityAvailable` alongside `Product.stockQty` in that transaction; small admin stock view. → **10% → 40%**, **10% → 70%**
 - [x] ⭐ **2.10b The concurrency proof** — `scripts/concurrency-test.mjs`: set one product to `stockQty = 10`, fire **20 simultaneous** `POST /api/orders` with `Promise.all`, assert **exactly 10 succeed, 10 fail cleanly, final stock is exactly 0, and zero orphan rows.** Print a results table. → **0% → 60%**
 
       This script *is* KPI #6. Run it live tomorrow. Nothing else you build will land as hard with an examiner as "watch it handle 20 at once without overselling."
 
-- [ ] **2.9 Invoice** *(stretch)* — a printable `/orders/[id]/invoice` HTML route. **No PDF library** — `window.print()` is enough today. → **0% → 30%**
+- [x] **2.9 Invoice** *(stretch)* — a printable `/orders/[id]/invoice` HTML route. **No PDF library** — `window.print()` is enough today. → **0% → 30%**
 
 ### 🟠 TEAM 3 — Payments, audit, dashboard → *target 45%*
 
@@ -223,12 +223,12 @@ Team 3 starts lowest (7%) and has 12 modules to cover, so **go wide, not deep.**
 - [x] **3.8 Notifications** — `notify()` on order placed / status changed / payment done, plus a bell + dropdown in `Header.tsx`. **Skip Redis and BullMQ entirely today** — a direct row insert is fine. → **10% → 50%**
 - [x] **3.2 + 3.3 Payment & transaction records** — `POST /api/payments` called by checkout: create `Payment` (`PENDING → COMPLETED`) + a `Transaction` of type `PAYMENT`, then flip the order to `CONFIRMED`. → both **10% → 60%**
 - [x] **3.1 Gateway** — Razorpay **test mode** if someone already has keys; otherwise build `src/lib/gateway/mock.ts` with the same interface (`createOrder`, `verifySignature`) and a deliberate ~10% random failure so you can demo the failure path. A clean interface with a mock behind it is defensible in a first review — *say so out loud* rather than letting them discover it. → **5% → 40%**
-- [ ] **3.4 Refunds** — on cancel, write a `REFUND` transaction + set payment `REFUNDED`. → **5% → 30%**
+- [x] **3.4 Refunds** — on cancel, write a `REFUND` transaction + set payment `REFUNDED`. → **5% → 30%**
 - [x] ⭐ **3.7 Dashboard** — `/dashboard` (admin-only), the single most visible thing you will show. `GET /api/admin/stats` using real Prisma aggregates: total revenue (`_sum`), order count, customer count, low-stock list, top products (`groupBy`), recent orders. → **0% → 60%**
 - [x] **3.5 + 3.6 Reports** — `/dashboard/reports` — sales by day (`groupBy` on `created_at`), top customers by spend. Write a `Report` row each time one is generated so the table is not empty. → **5% → 50%**, **0% → 40%**
 - [x] **3.10 CSV export** — a "Download CSV" button on reports. ~20 lines of string-building with the right `Content-Type` header. Do not reach for a library. → **0% → 40%**
-- [ ] **3.11 Backup** — `scripts/backup.mjs` shelling out to `pg_dump`, writing a `BackupHistory` row. Run it once so the table has data. → **10% → 30%**
-- [ ] **3.12 Monitoring** — extend `/api/db-check` into `/dashboard/health`: DB latency, table row counts, uptime. → **10% → 40%**
+- [x] **3.11 Backup** — `scripts/backup.mjs` shelling out to `pg_dump`, writing a `BackupHistory` row. Run it once so the table has data. → **10% → 30%**
+- [x] **3.12 Monitoring** — extend `/api/db-check` into `/dashboard/health`: DB latency, table row counts, uptime. → **10% → 40%**
 
 ---
 

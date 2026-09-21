@@ -84,12 +84,18 @@ export default async function DashboardPage() {
         <h1 className="font-display-grotesk font-black text-4xl sm:text-6xl uppercase tracking-tighter">
           DASHBOARD
         </h1>
-        <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-wider">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-wider">
+          <Link href="/dashboard/orders" className="hover:underline">
+            ORDERS ↗
+          </Link>
           <Link href="/dashboard/reports" className="hover:underline">
             REPORTS ↗
           </Link>
           <Link href="/dashboard/audit" className="hover:underline">
             AUDIT LOG ↗
+          </Link>
+          <Link href="/dashboard/health" className="hover:underline">
+            HEALTH &amp; STATUS ↗
           </Link>
           <a href="/api/reports/export" className="hover:underline">
             EXPORT CSV ↓

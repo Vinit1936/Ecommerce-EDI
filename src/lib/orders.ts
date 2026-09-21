@@ -251,7 +251,7 @@ export async function cancelOrder(orderId: string, customerId?: string) {
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
-      include: { orderItems: true },
+      include: { orderItems: true, payments: true },
     });
 
     if (!order || (customerId && order.customerId !== customerId)) {
@@ -268,6 +268,7 @@ export async function cancelOrder(orderId: string, customerId?: string) {
       );
     }
 
+    // Restore stock
     for (const item of order.orderItems) {
       await tx.product.update({
         where: { id: item.productId },
@@ -277,6 +278,24 @@ export async function cancelOrder(orderId: string, customerId?: string) {
         where: { productId: item.productId },
         data: { quantityAvailable: { increment: item.quantity } },
       });
+    }
+
+    // Process refunds for completed payments
+    for (const payment of order.payments) {
+      if (payment.status === 'COMPLETED') {
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: { status: 'REFUNDED' },
+        });
+        await tx.transaction.create({
+          data: {
+            paymentId: payment.id,
+            type: 'REFUND',
+            amount: payment.amount,
+            status: 'SUCCESS',
+          },
+        });
+      }
     }
 
     const updated = await tx.order.update({

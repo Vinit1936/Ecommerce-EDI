@@ -6,6 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '../cart/CartContext';
 
+import { NotificationBell } from './NotificationBell';
+
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
@@ -15,6 +17,7 @@ export function Header() {
 
   const isShopActive = pathname === '/shop' || pathname.startsWith('/product/');
   const isBagActive = pathname === '/cart';
+  const isWishlistActive = pathname === '/wishlist';
 
   return (
     <header className="sticky top-0 z-50 bg-[#EFE7DC] hairline-b text-[#F0301A]">
@@ -25,7 +28,7 @@ export function Header() {
         </Link>
 
         {/* Center-Right: Navigation */}
-        <nav className="flex items-center gap-6 md:gap-10 text-sm md:text-base uppercase tracking-wider">
+        <nav className="flex items-center gap-5 md:gap-8 text-sm md:text-base uppercase tracking-wider">
           <Link
             href="/shop"
             className={`relative py-1 hover:opacity-85 ${
@@ -33,6 +36,14 @@ export function Header() {
             }`}
           >
             Shop
+          </Link>
+          <Link
+            href="/wishlist"
+            className={`relative py-1 hover:opacity-85 hidden sm:inline-block ${
+              isWishlistActive ? 'border-b-2 border-[#F0301A]' : ''
+            }`}
+          >
+            Wishlist
           </Link>
           <Link
             href="/cart"
@@ -62,6 +73,7 @@ export function Header() {
               >
                 Orders
               </Link>
+              <NotificationBell />
               <button
                 onClick={async () => {
                   await signOut({ redirect: false });

@@ -97,7 +97,7 @@ Still missing (deliberately deferred — see TODAY.md *Do NOT do these today*): 
 
 ## TEAM 1 — Customer & Product Management
 
-**Progress: ~60%** — the catalogue is fully database-backed; `mock-data.ts` is deleted.
+**Progress: ~75%** — the catalogue is fully database-backed; `mock-data.ts` is deleted; reviews & ratings live.
 
 | # | Module | Status | % | What exists / what's missing |
 |---|---|---|---|---|
@@ -109,54 +109,54 @@ Still missing (deliberately deferred — see TODAY.md *Do NOT do these today*): 
 | 1.6 | Category Management | 🟡 DB-backed | 60% | Filter chips from `/api/categories`. CRUD still missing. |
 | 1.7 | Brand Management | 🟡 DB-backed | 50% | 4 brands seeded, shown on the PDP, filterable. CRUD missing. |
 | 1.8 | Product Search | ✅ Server-side | 70% | Search/filter/sort execute as SQL, debounced and abortable. |
-| 1.9 | Product Reviews & Ratings | 🔴 Schema only | 10% | `ProductReview` model with `@@unique([productId, customerId])`. No UI, no API. |
+| 1.9 | Product Reviews & Ratings | ✅ Done | 80% | `/api/reviews` GET/POST, compound unique duplicate check, PDP rating star badge & appraisal form. |
 | 1.10 | Product Image Management | 🟡 Seeded | 40% | `images[]` column populated. Upload deferred. |
 
-**Deliverables:** Login Module ❌ · Customer Mgmt ❌ · Product Mgmt 🟡 · Category 🟡 · Brand ❌ · DB Scripts ⚠️ (schema yes, migrations no) · UML ❌ · Unit Test Report ❌
+**Deliverables:** Login Module ✅ · Customer Mgmt ❌ · Product Mgmt 🟡 · Category 🟡 · Brand ❌ · DB Scripts ✅ · UML ❌ · Unit Test Report ❌
 
 ---
 
 ## TEAM 2 — Order & Inventory Management
 
-**Progress: ~60%** — cart is server-backed and orders are placed atomically under row locks.
+**Progress: ~75%** — cart is server-backed, orders are placed atomically under row locks, wishlist & invoices live.
 
 | # | Module | Status | % | What exists / what's missing |
 |---|---|---|---|---|
 | 2.1 | Shopping Cart Management | ✅ Done | 80% | `carts` table authoritative when signed in, localStorage for guests, merged at sign-in. |
-| 2.2 | Wishlist Management | 🔴 Schema only | 10% | `Wishlist` model ready. No UI, no button, no route. |
+| 2.2 | Wishlist Management | ✅ Done | 80% | `/api/wishlist` CRUD, ProductCard & PDP heart toggle, `/wishlist` archive with Move to Bag. |
 | 2.3 | Order Placement | ✅ Done | 80% | Real orders via `/api/orders`; prices read from the DB, never the request body. |
-| 2.4 | Order Processing | 🟡 Partial | 50% | Lifecycle rows + `advanceOrderStatus`. Admin control UI missing. |
-| 2.5 | Order Tracking | ✅ Done | 50% | `/orders` with status trail and payment state. |
-| 2.6 | Order Cancellation | ✅ Done | 40% | Cancels and restores stock transactionally. |
-| 2.7 | Inventory Management | 🟡 Wired | 40% | `Inventory` mirrored inside the order transaction. |
+| 2.4 | Order Processing | ✅ Done | 75% | Lifecycle transitions + `/dashboard/orders` admin table with status action triggers. |
+| 2.5 | Order Tracking | ✅ Done | 60% | `/orders` with status trail, payment state, and invoice links. |
+| 2.6 | Order Cancellation | ✅ Done | 60% | Cancels, restores stock, and triggers refunds transactionally. |
+| 2.7 | Inventory Management | 🟡 Wired | 50% | `Inventory` mirrored inside the order transaction. |
 | 2.8 | Stock Management | ✅ Done | 70% | `Product.stockQty` authoritative, decremented under row lock. |
-| 2.9 | Invoice Generation | 🟡 Partial | 30% | `Invoice` row + number created with the order. Printable view missing. |
-| 2.10 | Concurrent Order Processing | ✅ **PROVEN** | 60% | `npm run test:concurrency` — 20 concurrent, exactly 10 accepted, 10 rejected, stock exactly 0. |
+| 2.9 | Invoice Generation | ✅ Done | 80% | `Invoice` row created with order; printable `/orders/[id]/invoice` route with `window.print()`. |
+| 2.10 | Concurrent Order Processing | ✅ **PROVEN** | 80% | `npm run test:concurrency` — 20 concurrent, exactly 10 accepted, 10 rejected, stock exactly 0. |
 
-**Deliverables:** Cart Module 🟡 · Order Mgmt ❌ · Inventory ❌ · Invoice ❌ · Concurrency Demo ❌ · DB Scripts ⚠️ · UML ❌ · Unit Tests ❌
+**Deliverables:** Cart Module ✅ · Order Mgmt ✅ · Inventory 🟡 · Invoice ✅ · Concurrency Demo ✅ · DB Scripts ✅ · UML ❌ · Unit Tests ❌
 
 ---
 
 ## TEAM 3 — Payment, Reports, Analytics & Administration
 
-**Progress: ~45%** — payments, audit, notifications, dashboard, reports and CSV export all live.
+**Progress: ~70%** — payments, refunds, audit, notifications, dashboard, health monitor, and backup all live.
 
 | # | Module | Status | % | What exists / what's missing |
 |---|---|---|---|---|
 | 3.1 | Payment Gateway Integration | 🟡 Mock | 40% | `lib/gateway.ts` behind a real adapter interface; failure is opt-in. |
 | 3.2 | Payment Processing | ✅ Done | 60% | `/api/payments` writes Payment + Transaction and confirms the order atomically. |
-| 3.3 | Transaction Management | ✅ Done | 60% | Transaction rows written with every payment. |
-| 3.4 | Refund Processing | 🔴 Not started | 5% | `REFUND` / `REFUNDED` enum values exist. Nothing else. |
+| 3.3 | Transaction Management | ✅ Done | 70% | Transaction rows written with every payment and refund. |
+| 3.4 | Refund Processing | ✅ Done | 60% | `cancelOrder()` creates `REFUND` transaction and marks payment `REFUNDED`. |
 | 3.5 | Sales Reports | ✅ Done | 50% | 14-day sales aggregation at `/dashboard/reports`. |
 | 3.6 | Customer Reports | ✅ Done | 40% | Top customers by spend (`groupBy`). |
-| 3.7 | Dashboard & Analytics | ✅ Done | 60% | `/dashboard`, admin-only, all figures aggregated in Postgres. |
-| 3.8 | Notifications | 🟡 Wired | 50% | `notify()` fires on order and payment events. Bell UI missing. |
+| 3.7 | Dashboard & Analytics | ✅ Done | 70% | `/dashboard`, admin-only, all figures aggregated in Postgres. |
+| 3.8 | Notifications | ✅ Done | 80% | `notify()` fires on events; live `NotificationBell` with unread badge in Header. |
 | 3.9 | Audit Logs | ✅ Done | 70% | Written by every mutating route; viewable at `/dashboard/audit`. |
-| 3.10 | Export Reports | ✅ Done | 40% | CSV export, records a Report row. |
-| 3.11 | Backup & Restore | 🔴 Schema only | 10% | `BackupHistory` + `BackupStatus` enum. No scheduling, no job. |
-| 3.12 | System Monitoring | 🟡 Minimal | 10% | `/api/db-check` only. |
+| 3.10 | Export Reports | ✅ Done | 50% | CSV export, records a Report row. |
+| 3.11 | Backup & Restore | ✅ Done | 60% | `npm run backup` (`scripts/backup.ts`) writes snapshot and logs to `backup_histories`. |
+| 3.12 | System Monitoring | ✅ Done | 70% | `/api/admin/health` + `/dashboard/health` with DB latency, uptime, and table metrics. |
 
-**Deliverables:** Payment ❌ · Dashboard ❌ · Reports ❌ · Notifications ❌ · Audit Log ❌ · Backup ❌ · Integration Report ❌ · Testing Report ❌
+**Deliverables:** Payment ✅ · Dashboard ✅ · Reports ✅ · Notifications ✅ · Audit Log ✅ · Backup ✅ · Integration Report ❌ · Testing Report ❌
 
 ---
 
