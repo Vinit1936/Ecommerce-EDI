@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "test:concurrency": "tsx scripts/concurrency-test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

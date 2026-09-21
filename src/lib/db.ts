@@ -9,7 +9,17 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  const adapter = new PrismaPg({ connectionString: databaseUrl });
+  // The pool has to be able to hold every in-flight interactive transaction at
+  // once. Order placement holds a connection for the life of its transaction,
+  // so a pool smaller than the concurrency target fails with "Unable to start a
+  // transaction in the given time" long before the database is under any real
+  // strain. KPI #6 asks for 20 concurrent orders; leave headroom above that.
+  const adapter = new PrismaPg({
+    connectionString: databaseUrl,
+    max: Number(process.env.DB_POOL_MAX ?? 30),
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 20_000,
+  });
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
