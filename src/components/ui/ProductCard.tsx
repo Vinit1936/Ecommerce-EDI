@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Product } from '@/lib/mock-data';
+import type { Product } from '@/lib/types';
 import { PriceTag } from './PriceTag';
 import { Badge } from './Badge';
 
@@ -19,7 +19,7 @@ export function ProductCard({ product, aspectRatio = 'square', className = '' }:
   };
 
   return (
-    <Link href={`/product/${product.id}`} className={`group block text-[#F0301A] ${className}`}>
+    <Link href={`/product/${product.slug}`} className={`group block text-[#F0301A] ${className}`}>
       {/* Photo container: edge to edge, square cropped, zero radius, no border/shadow */}
       <div className={`relative w-full overflow-hidden bg-[#FFFFFF] ${aspectClasses[aspectRatio]}`}>
         <Image

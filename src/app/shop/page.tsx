@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { MOCK_PRODUCTS, CATEGORIES } from '@/lib/mock-data';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ActionLink } from '@/components/ui/Button';
+import type { Product, ProductSort } from '@/lib/types';
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -13,36 +12,54 @@ function ShopContent() {
 
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
-  const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'newest'>('featured');
+  const [sortBy, setSortBy] = useState<ProductSort>('featured');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter((product) => {
-      // Category filter
-      if (selectedCategory !== 'ALL' && product.category !== selectedCategory) {
-        return false;
-      }
-      // Availability filter
-      if (inStockOnly && !product.inStock) {
-        return false;
-      }
-      // Search query
-      if (searchQuery.trim() !== '') {
-        const query = searchQuery.toLowerCase();
-        const matchesName = product.name.toLowerCase().includes(query);
-        const matchesSpecimen = product.specimenNo.toLowerCase().includes(query);
-        const matchesCategory = product.category.toLowerCase().includes(query);
-        if (!matchesName && !matchesSpecimen && !matchesCategory) {
-          return false;
+  const [categories, setCategories] = useState<string[]>(['ALL']);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Category chips are database rows now, not a hardcoded string array.
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          setCategories(['ALL', ...d.data.categories.map((c: { name: string }) => c.name)]);
         }
-      }
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === 'price-asc') return a.price - b.price;
-      if (sortBy === 'price-desc') return b.price - a.price;
-      if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
-      return 0; // featured default order
-    });
+      })
+      .catch(() => {});
+  }, []);
+
+  // Search, filter and sort all execute as SQL on the server. Debounced so
+  // typing does not fire one request per keystroke, and aborted on change so
+  // a slow earlier response cannot overwrite a newer one.
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.set('q', searchQuery.trim());
+      if (selectedCategory !== 'ALL') params.set('category', selectedCategory);
+      if (inStockOnly) params.set('inStock', 'true');
+      params.set('sort', sortBy);
+
+      fetch(`/api/products?${params.toString()}`, { signal: controller.signal })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success) {
+            setProducts(d.data.products);
+            setTotal(d.data.total);
+          }
+          setLoading(false);
+        })
+        .catch(() => {});
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [selectedCategory, inStockOnly, sortBy, searchQuery]);
 
   return (
@@ -54,7 +71,7 @@ function ShopContent() {
             ● CATALOGUE / {selectedCategory}
           </span>
           <span className="text-xs uppercase font-bold tracking-widest text-[#F0301A]">
-            {filteredProducts.length} SPECIMENS FOUND
+            {total} SPECIMENS FOUND
           </span>
         </div>
 
@@ -68,7 +85,7 @@ function ShopContent() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 pb-6 border-b border-[#F0301A]/20">
         {/* Category Filter Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
-          {CATEGORIES.map((category) => {
+          {categories.map((category) => {
             const isActive = selectedCategory === category;
             return (
               <button
@@ -115,7 +132,7 @@ function ShopContent() {
             <span>SORT:</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as ProductSort)}
               className="bg-[#EFE7DC] border border-[#F0301A] text-[#F0301A] px-2 py-1.5 focus:outline-none cursor-pointer font-display-grotesk font-bold"
             >
               <option value="featured">FEATURED</option>
@@ -128,9 +145,13 @@ function ShopContent() {
       </div>
 
       {/* Product Grid or Empty State */}
-      {filteredProducts.length > 0 ? (
+      {loading ? (
+        <div className="py-20 text-center text-xs font-bold uppercase tracking-widest text-[#F0301A]/60">
+          LOADING SPECIMENS...
+        </div>
+      ) : products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
-          {filteredProducts.map((product, index) => {
+          {products.map((product, index) => {
             // Apply asymmetric spans for continuous visual rhythm
             const isHeroTile = index % 7 === 0;
             return (

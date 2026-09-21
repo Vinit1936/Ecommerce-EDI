@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { ActionLink } from '@/components/ui/Button';
 
 export default function SignupPage() {
@@ -9,10 +11,34 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    setError(null);
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ fullName, email, password }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.error ?? 'Registration failed');
+        return;
+      }
+      // Sign the new account straight in, so registering lands them logged in.
+      await signIn('credentials', { email, password, redirect: false });
+      setIsSubmitted(true);
+      router.refresh();
+    } catch {
+      setError('Could not reach the server. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,9 +109,15 @@ export default function SignupPage() {
               />
             </div>
 
+            {error && (
+              <div className="p-3 border border-[#F0301A] bg-[#F0301A]/10 text-xs font-bold uppercase tracking-wider text-[#F0301A]">
+                ● {error}
+              </div>
+            )}
+
             <div className="pt-2">
-              <ActionLink type="submit" size="lg" className="w-full justify-between">
-                REGISTER ↗
+              <ActionLink type="submit" size="lg" className="w-full justify-between" disabled={isLoading}>
+                {isLoading ? 'CREATING ACCOUNT...' : 'REGISTER ↗'}
               </ActionLink>
             </div>
 

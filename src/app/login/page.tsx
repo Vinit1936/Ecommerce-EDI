@@ -1,17 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { ActionLink } from '@/components/ui/Button';
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    setError(null);
+    setIsLoading(true);
+    try {
+      const result = await signIn('credentials', { email, password, redirect: false });
+      if (!result || result.error) {
+        setError('Invalid email or password');
+        return;
+      }
+      setIsSubmitted(true);
+      // proxy.ts puts the originally requested path here when it redirects.
+      const callbackUrl = searchParams.get('callbackUrl');
+      router.replace(callbackUrl || '/shop');
+      router.refresh();
+    } catch {
+      setError('Could not reach the server. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -68,9 +91,15 @@ export default function LoginPage() {
               />
             </div>
 
+            {error && (
+              <div className="p-3 border border-[#F0301A] bg-[#F0301A]/10 text-xs font-bold uppercase tracking-wider text-[#F0301A]">
+                ● {error}
+              </div>
+            )}
+
             <div className="pt-2">
-              <ActionLink type="submit" size="lg" className="w-full justify-between">
-                LOG IN ↗
+              <ActionLink type="submit" size="lg" className="w-full justify-between" disabled={isLoading}>
+                {isLoading ? 'SIGNING IN...' : 'LOG IN ↗'}
               </ActionLink>
             </div>
 
@@ -84,5 +113,15 @@ export default function LoginPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={<div className="p-8 text-center font-bold text-[#F0301A]">LOADING...</div>}
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

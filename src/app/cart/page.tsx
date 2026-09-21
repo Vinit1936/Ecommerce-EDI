@@ -68,7 +68,7 @@ export default function CartPage() {
                   {item.product.specimenNo}
                 </span>
                 <h3 className="font-editorial-serif font-bold text-2xl text-[#161412]">
-                  <Link href={`/product/${item.product.id}`} className="hover:opacity-80">
+                  <Link href={`/product/${item.product.slug}`} className="hover:opacity-80">
                     {item.product.name}
                   </Link>
                 </h3>

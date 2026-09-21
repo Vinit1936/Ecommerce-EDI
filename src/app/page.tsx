@@ -1,13 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
-import { MOCK_PRODUCTS, CATEGORIES } from '@/lib/mock-data';
+import { getFeaturedProducts, listProducts, listCategoryNames } from '@/lib/products';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { ActionLink } from '@/components/ui/Button';
 import { Colophon } from '@/components/layout/Colophon';
 
-export default function HomePage() {
-  const featuredProducts = MOCK_PRODUCTS.filter((p) => p.isFeatured || p.isNew).slice(0, 7);
-  const apparelProducts = MOCK_PRODUCTS.filter((p) => p.category === 'APPAREL').slice(0, 4);
+export default async function HomePage() {
+  const [featuredProducts, apparel, CATEGORIES] = await Promise.all([
+    getFeaturedProducts(7),
+    listProducts({ category: 'APPAREL', limit: 4 }),
+    listCategoryNames(),
+  ]);
+  const apparelProducts = apparel.products;
 
   return (
     <div className="min-h-screen text-[#F0301A]">
@@ -69,7 +73,7 @@ export default function HomePage() {
             FEATURED CURATION
           </h2>
           <span className="text-xs uppercase font-bold text-[#F0301A]">
-            07 ITEMS
+            {String(featuredProducts.length).padStart(2, '0')} ITEMS
           </span>
         </div>
 
