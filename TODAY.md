@@ -47,7 +47,17 @@ Also from those docs: proxy runs separately from render code and **should not re
 
 ---
 
-## WAVE 0 — Shared foundation (~90 min, BLOCKING)
+## WAVE 0 — Shared foundation ✅ COMPLETE
+
+> **Done and pushed.** Migrations baselined + applied, database seeded (12 products,
+> 4 brands, 5 categories, 2 demo accounts), shared libs written, auth verified
+> end-to-end. Teams 1–3 are unblocked: `getSession()` returns a real `customerId`.
+> Run `npm install && npx prisma generate && npm run seed` after pulling.
+>
+> **Demo accounts** — password `Password123!` for both:
+> `admin@hellohello.studio` (ADMIN) · `customer@hellohello.studio` (CUSTOMER)
+
+### Original plan (~90 min, BLOCKING)
 
 **One person drives and screen-shares. The other two read along and do not touch the repo.** Every task after this depends on Wave 0, and three people editing `schema.prisma` at once on day one is how you lose an afternoon to merge conflicts.
 
@@ -71,11 +81,11 @@ Edit `prisma/schema.prisma`. From `CHECKLIST.md` → *Schema Gaps*:
 
 Create `prisma/seed.ts` and **port the 13 products out of `src/lib/mock-data.ts` directly into the database.**
 
-This matters more than it looks: the UI already renders those exact 13 products beautifully. Seed the same data and the site looks *identical* after the swap — but every pixel is now coming from Postgres. Zero visual regression, total architectural change. It also means a broken query is immediately obvious during the demo.
+This matters more than it looks: the UI already renders those exact 12 products beautifully. Seed the same data and the site looks *identical* after the swap — but every pixel is now coming from Postgres. Zero visual regression, total architectural change. It also means a broken query is immediately obvious during the demo.
 
 - [ ] 3 roles: `CUSTOMER`, `ADMIN`, `VENDOR` *(the `roles` table already has 2 stray test rows — clear them first)*
 - [ ] Brands + categories referenced by the mock data
-- [ ] All 13 products (`hh-01` … `hh-13`) with real prices, stock, images
+- [ ] All 12 products (`hh-01` … `hh-12`) with real prices, stock, images
 - [ ] 1 warehouse + `Inventory` rows per product
 - [ ] 2 users with bcrypt-hashed passwords: `admin@hellohello.studio` / `customer@hellohello.studio` — **memorise these, you will type them live tomorrow**
 - [ ] 1 `Customer` profile linked to the customer user

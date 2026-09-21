@@ -11,10 +11,10 @@ The repo is a **design-complete frontend shell on mock data, plus a fully-modell
 | Layer | State |
 |---|---|
 | Prisma schema | 20 tables live on Neon Postgres, covering all 3 teams' required tables |
-| Database rows | **Empty** — only `roles` has 2 rows (leftover from a CRUD test script) |
-| Frontend | 7 pages, pixel-complete, **100% driven by `src/lib/mock-data.ts`** (13 hardcoded products) |
+| Database rows | **Seeded** (Wave 0) — 12 products, 4 brands, 5 categories, 1 warehouse, 2 demo users |
+| Frontend | 7 pages, pixel-complete, **100% driven by `src/lib/mock-data.ts`** (12 hardcoded products) |
 | API routes | **1 total** — `/api/db-check` (health check) |
-| Auth | **None.** No NextAuth, no bcrypt, no sessions, no middleware |
+| Auth | **Working** (Wave 0) — NextAuth v5 + bcrypt, JWT session carrying `role` + `customerId`, `proxy.ts` route guard |
 | Prisma usage in app | **Only** in `/api/db-check`. Zero UI reads/writes touch the DB |
 | Tests | None |
 
@@ -38,7 +38,7 @@ Smoke-tested and confirmed on this machine:
 | Route | Status |
 |---|---|
 | `/` `/shop` `/cart` `/checkout` `/login` `/signup` | `200` |
-| `/product/hh-01` | `200` (IDs are `hh-01`…`hh-13`; `/product/1` correctly 404s) |
+| `/product/hh-01` | `200` (IDs are `hh-01`…`hh-12`; `/product/1` correctly 404s) |
 | `/api/db-check` | `200` — connected to **PostgreSQL 18.6** on Neon |
 
 **Environment:** `.env` / `.env.local` are committed (commit `3e4a6a0` "Pushed env file") and already contain working `DATABASE_URL` (pooled) + `DIRECT_URL` (unpooled) Neon credentials, so setup needs no manual env work. See *Risks* below — this should be corrected.
@@ -62,7 +62,7 @@ Build passes after this change. **This is the only code edit made during the aud
 
 ### Known issues, not yet fixed
 
-- **No `prisma/migrations/` directory.** Tables were created with `prisma db push`, so there is no migration history. The PDF requires *"Database Scripts"* as a deliverable from all three teams — this needs `prisma migrate dev` to produce real, reviewable SQL.
+- ~~No `prisma/migrations/` directory.~~ **Resolved in Wave 0.** The live database was baselined as `0_init` (non-destructive) and the schema-gap changes applied as `20260921193804_add_catalog_customer_order_fields`. Real reviewable SQL now exists — the *"Database Scripts"* deliverable is satisfied.
 - **`npm run lint` → 4 errors, 2 warnings**, incl. `react-hooks/set-state-in-effect` in `CartContext.tsx:35` and an unescaped `'` in `Footer.tsx:70`.
 - `scripts/verify-db-tables.mjs` crashes on the enum section (`e.enum_values.join is not a function`). Table listing works.
 - `next lint` no longer exists in Next 16 — use `npm run lint`.
@@ -76,16 +76,18 @@ Nothing below can be built properly until these land. They are **nobody's workle
 
 | # | Item | Owner | Status |
 |---|---|---|---|
-| C1 | **Auth foundation** (NextAuth + bcrypt + session + role middleware) — Teams 2 & 3 are blocked without a `customerId` on the request | Team 1 | ❌ Not started |
-| C2 | **Seed script** — DB is empty; no products means no cart, no orders, no payments, no reports | Team 1 | ❌ Not started |
+| C1 | **Auth foundation** (NextAuth + bcrypt + session + role middleware) | Team 1 | ✅ **Done** — `src/lib/auth.ts`, `src/proxy.ts`. Verified: session returns real `customerId` |
+| C2 | **Seed script** | Team 1 | ✅ **Done** — `prisma/seed.ts`, idempotent, `npm run seed` |
 | C3 | **Replace `mock-data.ts` with real DB reads** — the single largest piece of work in the repo | Team 1 → all | ❌ Not started |
-| C4 | **Migration history** (`prisma migrate dev`) instead of `db push` | Shared | ❌ Not started |
-| C5 | **Shared API response + Zod validation convention** | Shared | ❌ Not started |
-| C6 | **Schema gaps** — see *Schema Gaps* below | Shared | ⚠️ Needed |
+| C4 | **Migration history** instead of `db push` | Shared | ✅ **Done** — baselined `0_init` + delta migration |
+| C5 | **Shared API response + Zod validation convention** | Shared | ✅ **Done** — `src/lib/api.ts` (`ok`/`fail`); zod installed |
+| C6 | **Schema gaps** — see *Schema Gaps* below | Shared | ✅ **Done** — all closed in the Wave 0 migration |
 
 ### Missing dependencies vs. `Techstack.md`
 
-`Techstack.md` promises these; none are installed: `next-auth`, `zod`, `bcrypt`, `redis`, `bullmq`, `socket.io`, `razorpay`/`stripe`, `firebase`, `jest`, `@testing-library/react`, `prettier`, `husky`.
+Installed in Wave 0: `next-auth@beta`, `zod`, `bcryptjs`, `tsx`.
+
+Still missing (deliberately deferred — see TODAY.md *Do NOT do these today*): `redis`, `bullmq`, `socket.io`, `razorpay`/`stripe`, `firebase`, `jest`, `@testing-library/react`, `prettier`, `husky`.
 
 ### Folder structure drift
 
@@ -106,7 +108,7 @@ Nothing below can be built properly until these land. They are **nobody's workle
 | 1.5 | Product Management | 🟡 Read-only mock | 25% | Catalog + PDP fully built against `MOCK_PRODUCTS`. No admin CRUD, no DB reads. |
 | 1.6 | Category Management | 🟡 Partial | 20% | Self-referencing `Category` hierarchy in schema (good). UI filters a hardcoded `CATEGORIES` string array. No CRUD. |
 | 1.7 | Brand Management | 🔴 Schema only | 10% | `Brand` model + FK. No UI, no CRUD, brand never shown on PDP. |
-| 1.8 | Product Search | 🟡 Client-side | 30% | `shop/page.tsx` filters by name/specimen/category + sort + in-stock, all in `useMemo` over 13 mock items. Needs server-side query + pagination. |
+| 1.8 | Product Search | 🟡 Client-side | 30% | `shop/page.tsx` filters by name/specimen/category + sort + in-stock, all in `useMemo` over 12 mock items. Needs server-side query + pagination. |
 | 1.9 | Product Reviews & Ratings | 🔴 Schema only | 10% | `ProductReview` model with `@@unique([productId, customerId])`. No UI, no API. |
 | 1.10 | Product Image Management | 🔴 Not started | 0% | **`Product` has no image column at all.** Images are hardcoded URLs in mock data. Firebase Storage not installed. PDF ties this to the OS subject. |
 
