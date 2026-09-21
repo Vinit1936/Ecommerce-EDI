@@ -28,13 +28,7 @@ export async function GET(request: Request) {
     const reviews = await prisma.productReview.findMany({
       where: { productId },
       include: {
-        customer: {
-          select: {
-            firstName: true,
-            lastName: true,
-            user: { select: { email: true } },
-          },
-        },
+        customer: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -45,13 +39,16 @@ export async function GET(request: Request) {
         : 0;
 
     return ok({
-      reviews: reviews.map((r) => ({
-        id: r.id,
-        rating: r.rating,
-        comment: r.comment,
-        createdAt: r.createdAt,
-        author: `${r.customer.firstName || ''} ${r.customer.lastName || ''}`.trim() || 'Anonymous Customer',
-      })),
+      reviews: reviews.map((r) => {
+        const cust = r.customer as { firstName?: string; lastName?: string } | null | undefined;
+        return {
+          id: r.id,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.createdAt,
+          author: `${cust?.firstName || ''} ${cust?.lastName || ''}`.trim() || 'Anonymous Customer',
+        };
+      }),
       total: reviews.length,
       averageRating: Number(averageRating.toFixed(1)),
     });

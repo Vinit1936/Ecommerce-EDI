@@ -55,7 +55,7 @@ async function runBackup() {
   try {
     const [
       roles,
-      users,
+      rawUsers,
       customers,
       categories,
       brands,
@@ -69,7 +69,7 @@ async function runBackup() {
       auditLogs,
     ] = await Promise.all([
       prisma.role.findMany(),
-      prisma.user.findMany({ select: { id: true, email: true, roleId: true, isActive: true } }),
+      prisma.user.findMany(),
       prisma.customer.findMany(),
       prisma.category.findMany(),
       prisma.brand.findMany(),
@@ -82,6 +82,12 @@ async function runBackup() {
       prisma.transaction.findMany(),
       prisma.auditLog.findMany({ take: 100 }),
     ]);
+
+    const users = rawUsers.map((u) => {
+      const { passwordHash, ...safe } = u;
+      void passwordHash;
+      return safe;
+    });
 
     const snapshot = {
       meta: {
