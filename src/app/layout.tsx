@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Space_Grotesk, Playfair_Display } from 'next/font/google';
 import './globals.css';
-import { CartProvider } from '@/components/cart/CartContext';
+import { Providers } from '@/components/providers/Providers';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
@@ -38,11 +38,11 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-[#EFE7DC] text-[#F0301A] font-display-grotesk selection:bg-[#F0301A] selection:text-[#EFE7DC]"
       >
-        <CartProvider>
+        <Providers>
           <Header />
           <main className="flex-grow">{children}</main>
           <Footer />
-        </CartProvider>
+        </Providers>
       </body>
     </html>
   );

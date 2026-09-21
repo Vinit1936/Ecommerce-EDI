@@ -67,7 +67,7 @@ export function Footer() {
                 href="mailto:contact@hellohello.studio"
                 className="text-base md:text-lg font-bold hover:opacity-75 inline-flex items-center gap-1"
               >
-                LET'S TALK ↗
+                LET&apos;S TALK ↗
               </a>
             </div>
           </div>

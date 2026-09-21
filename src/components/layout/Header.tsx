@@ -2,12 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import { useCart } from '../cart/CartContext';
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { totalItemsCount } = useCart();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === 'ADMIN';
 
   const isShopActive = pathname === '/shop' || pathname.startsWith('/product/');
   const isBagActive = pathname === '/cart';
@@ -38,14 +42,48 @@ export function Header() {
           >
             Bag ({totalItemsCount})
           </Link>
-          <Link
-            href="/login"
-            className={`relative py-1 hover:opacity-85 hidden sm:inline-block ${
-              pathname === '/login' ? 'border-b-2 border-[#F0301A]' : ''
-            }`}
-          >
-            Account
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/dashboard"
+              className={`relative py-1 hover:opacity-85 hidden md:inline-block ${
+                pathname.startsWith('/dashboard') ? 'border-b-2 border-[#F0301A]' : ''
+              }`}
+            >
+              Dashboard
+            </Link>
+          )}
+          {session?.user ? (
+            <>
+              <Link
+                href="/orders"
+                className={`relative py-1 hover:opacity-85 hidden sm:inline-block ${
+                  pathname.startsWith('/orders') ? 'border-b-2 border-[#F0301A]' : ''
+                }`}
+              >
+                Orders
+              </Link>
+              <button
+                onClick={async () => {
+                  await signOut({ redirect: false });
+                  router.push('/');
+                  router.refresh();
+                }}
+                className="relative py-1 hover:opacity-85 bg-transparent border-0 text-[#F0301A] font-display-grotesk font-bold uppercase tracking-wider cursor-pointer text-sm md:text-base"
+                title={session.user.email ?? undefined}
+              >
+                Log Out
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className={`relative py-1 hover:opacity-85 hidden sm:inline-block ${
+                pathname === '/login' ? 'border-b-2 border-[#F0301A]' : ''
+              }`}
+            >
+              Account
+            </Link>
+          )}
         </nav>
 
         {/* Far Right: Constant Brand Sign-off Three-Dot Mark */}

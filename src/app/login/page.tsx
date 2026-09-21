@@ -104,7 +104,7 @@ function LoginContent() {
             </div>
 
             <div className="hairline-t pt-4 text-center text-xs font-sans text-[#161412]">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/signup" className="font-display-grotesk font-bold text-[#F0301A] uppercase underline">
                 REGISTER HERE ↗
               </Link>

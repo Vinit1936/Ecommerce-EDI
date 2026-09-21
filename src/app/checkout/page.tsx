@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useCart } from '@/components/cart/CartContext';
 import { PriceTag } from '@/components/ui/PriceTag';
 import { ActionLink } from '@/components/ui/Button';
 
 export default function CheckoutPage() {
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, isSignedIn, refresh } = useCart();
+  const router = useRouter();
 
   const [form, setForm] = useState({
     email: 'client@hellohello.studio',
@@ -24,6 +25,7 @@ export default function CheckoutPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [orderConfirmed, setOrderConfirmed] = useState<null | {
     id: string;
     items: typeof items;
@@ -38,22 +40,71 @@ export default function CheckoutPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
 
+    // Orders are keyed to a Customer, so an anonymous checkout cannot be
+    // persisted. Send guests to sign in and bring them straight back; their
+    // cart is merged server-side on arrival.
+    if (!isSignedIn) {
+      router.push('/login?callbackUrl=/checkout');
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      const orderId = `HH-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+    setError(null);
+    const placed = [...items];
+
+    try {
+      // 1. Place the order — stock is checked and decremented atomically here.
+      const orderRes = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: `${form.firstName} ${form.lastName}`.trim(),
+          address: [form.address, form.apartment].filter(Boolean).join(', '),
+          city: form.city,
+          postalCode: form.postalCode,
+          country: form.country,
+          phone: form.phone,
+          method: form.shippingMethod,
+        }),
+      });
+      const orderData = await orderRes.json();
+      if (!orderData.success) {
+        setError(orderData.error ?? 'Could not place your order');
+        return;
+      }
+
+      const { order, invoiceNo } = orderData.data;
+
+      // 2. Take payment. The order exists either way; a failed payment leaves
+      //    it PENDING rather than silently discarding it.
+      const payRes = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      const payData = await payRes.json();
+      if (!payData.success) {
+        setError(`Order ${invoiceNo} was created but payment failed: ${payData.error}`);
+        return;
+      }
+
       setOrderConfirmed({
-        id: orderId,
-        items: [...items],
-        total: totalAmount,
+        id: invoiceNo,
+        items: placed,
+        total: Number(order.totalAmount),
         shippingAddress: { ...form },
       });
       clearCart();
+      await refresh();
+    } catch {
+      setError('Could not reach the server. Please try again.');
+    } finally {
       setIsSubmitting(false);
-    }, 1200);
+    }
   };
 
   // Order Confirmation State
@@ -304,9 +355,19 @@ export default function CheckoutPage() {
           </div>
 
           {/* Place Order Action Link */}
-          <div className="hairline-t pt-6">
+          <div className="hairline-t pt-6 space-y-4">
+            {error && (
+              <div className="p-3 border border-[#F0301A] bg-[#F0301A]/10 text-xs font-bold uppercase tracking-wider text-[#F0301A]">
+                ● {error}
+              </div>
+            )}
+            {!isSignedIn && (
+              <div className="p-3 border border-[#F0301A]/40 text-xs font-bold uppercase tracking-wider text-[#F0301A]/80">
+                ● SIGN IN TO COMPLETE YOUR ORDER — YOUR BAG WILL BE KEPT
+              </div>
+            )}
             <ActionLink type="submit" disabled={isSubmitting} size="lg">
-              {isSubmitting ? 'PROCESSING SPECIMENS...' : 'PLACE ORDER ↗'}
+              {isSubmitting ? 'PROCESSING SPECIMENS...' : isSignedIn ? 'PLACE ORDER ↗' : 'SIGN IN TO CONTINUE ↗'}
             </ActionLink>
           </div>
         </div>
