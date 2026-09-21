@@ -12,13 +12,13 @@ The repo is a **design-complete frontend shell on mock data, plus a fully-modell
 |---|---|
 | Prisma schema | 20 tables live on Neon Postgres, covering all 3 teams' required tables |
 | Database rows | **Seeded** (Wave 0) — 12 products, 4 brands, 5 categories, 1 warehouse, 2 demo users |
-| Frontend | 7 pages, pixel-complete, **100% driven by `src/lib/mock-data.ts`** (12 hardcoded products) |
-| API routes | **1 total** — `/api/db-check` (health check) |
+| Frontend | 13 routes, all reading live data. `mock-data.ts` has been **deleted** |
+| API routes | **12** — auth, products, categories, brands, cart, orders, cancel, payments, admin stats, CSV export |
 | Auth | **Working** (Wave 0) — NextAuth v5 + bcrypt, JWT session carrying `role` + `customerId`, `proxy.ts` route guard |
-| Prisma usage in app | **Only** in `/api/db-check`. Zero UI reads/writes touch the DB |
-| Tests | None |
+| Prisma usage in app | Throughout — every page and route reads/writes Postgres |
+| Tests | `npm run test:concurrency` (KPI #6 proof, 6/6 checks pass) |
 
-**Overall functional completeness vs. the PDF: roughly 18–20%.** Schema design is genuinely ahead of schedule; application logic has not started.
+**Overall functional completeness vs. the PDF: roughly 55%** (was ~18% at audit time). Waves 0 and 1 are complete: the catalogue, cart, orders, payments and dashboard all run against Postgres.
 
 > Percentages below are estimates weighted so that *schema alone ≈ 10%, schema + UI on mock data ≈ 25–35%, wired end-to-end ≈ 100%*.
 
@@ -97,20 +97,20 @@ Still missing (deliberately deferred — see TODAY.md *Do NOT do these today*): 
 
 ## TEAM 1 — Customer & Product Management
 
-**Progress: ~16%** — the catalog *looks* finished but reads zero rows from the database.
+**Progress: ~60%** — the catalogue is fully database-backed; `mock-data.ts` is deleted.
 
 | # | Module | Status | % | What exists / what's missing |
 |---|---|---|---|---|
-| 1.1 | User Registration | 🟡 UI shell | 15% | `signup/page.tsx` renders + validates, but `handleSubmit` just calls `setIsSubmitted(true)`. No API, no hashing, no insert. `users` table ready. |
-| 1.2 | Login Authentication | 🟡 UI shell | 10% | `login/page.tsx` shows *"DEMO SESSION ACTIVE"* on submit. No NextAuth, no session, no cookie. **Blocks C1.** |
-| 1.3 | Role-Based Access Control | 🔴 Schema only | 5% | `Role` model + FK on `User`; 2 rows seeded. No middleware, no guards, no role checks anywhere. PDF requires Customer / Admin / Vendor. |
+| 1.1 | User Registration | ✅ Done | 100% | `POST /api/auth/register`, zod + bcrypt, User+Customer in one transaction, audit logged. Signup page wired. |
+| 1.2 | Login Authentication | ✅ Done | 90% | NextAuth v5 credentials, JWT session carrying role + customerId. |
+| 1.3 | Role-Based Access Control | ✅ Done | 70% | 3 roles seeded, `requireRole`/`requireCustomer` guards, `proxy.ts` route gating. Verified CUSTOMER gets 403 on admin stats. |
 | 1.4 | Customer Management | 🔴 Schema only | 10% | `Customer` model (address, city) exists. No profile page, no dashboard, no CRUD. |
-| 1.5 | Product Management | 🟡 Read-only mock | 25% | Catalog + PDP fully built against `MOCK_PRODUCTS`. No admin CRUD, no DB reads. |
-| 1.6 | Category Management | 🟡 Partial | 20% | Self-referencing `Category` hierarchy in schema (good). UI filters a hardcoded `CATEGORIES` string array. No CRUD. |
-| 1.7 | Brand Management | 🔴 Schema only | 10% | `Brand` model + FK. No UI, no CRUD, brand never shown on PDP. |
-| 1.8 | Product Search | 🟡 Client-side | 30% | `shop/page.tsx` filters by name/specimen/category + sort + in-stock, all in `useMemo` over 12 mock items. Needs server-side query + pagination. |
+| 1.5 | Product Management | 🟡 DB-backed | 60% | Catalogue reads Postgres. Admin CRUD still missing. |
+| 1.6 | Category Management | 🟡 DB-backed | 60% | Filter chips from `/api/categories`. CRUD still missing. |
+| 1.7 | Brand Management | 🟡 DB-backed | 50% | 4 brands seeded, shown on the PDP, filterable. CRUD missing. |
+| 1.8 | Product Search | ✅ Server-side | 70% | Search/filter/sort execute as SQL, debounced and abortable. |
 | 1.9 | Product Reviews & Ratings | 🔴 Schema only | 10% | `ProductReview` model with `@@unique([productId, customerId])`. No UI, no API. |
-| 1.10 | Product Image Management | 🔴 Not started | 0% | **`Product` has no image column at all.** Images are hardcoded URLs in mock data. Firebase Storage not installed. PDF ties this to the OS subject. |
+| 1.10 | Product Image Management | 🟡 Seeded | 40% | `images[]` column populated. Upload deferred. |
 
 **Deliverables:** Login Module ❌ · Customer Mgmt ❌ · Product Mgmt 🟡 · Category 🟡 · Brand ❌ · DB Scripts ⚠️ (schema yes, migrations no) · UML ❌ · Unit Test Report ❌
 
@@ -118,20 +118,20 @@ Still missing (deliberately deferred — see TODAY.md *Do NOT do these today*): 
 
 ## TEAM 2 — Order & Inventory Management
 
-**Progress: ~12%** — cart UX is the most polished thing in the repo, and also the most disposable: it lives in `localStorage` and vanishes on a different browser.
+**Progress: ~60%** — cart is server-backed and orders are placed atomically under row locks.
 
 | # | Module | Status | % | What exists / what's missing |
 |---|---|---|---|---|
-| 2.1 | Shopping Cart Management | 🟡 localStorage | 35% | `CartContext.tsx` (155 lines) — add/remove/update/clear, subtotal, size+colour variants, persisted to `hh_ecommerce_cart_v1`. `carts` table exists but is **never written to**. |
+| 2.1 | Shopping Cart Management | ✅ Done | 80% | `carts` table authoritative when signed in, localStorage for guests, merged at sign-in. |
 | 2.2 | Wishlist Management | 🔴 Schema only | 10% | `Wishlist` model ready. No UI, no button, no route. |
-| 2.3 | Order Placement | 🟡 Fake | 20% | `checkout/page.tsx` (359 lines) — full address form + shipping tiers. `handlePlaceOrder` runs `setTimeout(1200)` and invents `HH-2026-{random}`. Nothing persists. |
-| 2.4 | Order Processing | 🔴 Not started | 5% | `OrderStatusType` enum only. No state machine, no transitions. |
-| 2.5 | Order Tracking | 🔴 Schema only | 10% | `OrderStatus` history table modelled. No orders page, no tracking view. |
-| 2.6 | Order Cancellation | 🔴 Not started | 5% | `CANCELLED` / `RETURNED` enum values exist. No logic, no stock restoration. |
-| 2.7 | Inventory Management | 🔴 Schema only | 10% | `Inventory` + `Warehouse` with `@@unique([productId, warehouseId])` — well modelled. Zero logic, zero rows. |
-| 2.8 | Stock Management | 🔴 Schema only | 10% | `Product.stockQty` + `Inventory.quantityAvailable`. **Two sources of truth — decide which is authoritative.** No decrement on order. |
-| 2.9 | Invoice Generation | 🔴 Not started | 0% | No model, no PDF lib, no storage. Checkout confirmation is screen-only. |
-| 2.10 | Concurrent Order Processing | 🔴 Not started | 0% | **KPI #6 requires 20 concurrent orders with no race conditions.** Needs `prisma.$transaction` + row locking (`SELECT … FOR UPDATE`) or optimistic version checks. Highest-risk unstarted item in the project. |
+| 2.3 | Order Placement | ✅ Done | 80% | Real orders via `/api/orders`; prices read from the DB, never the request body. |
+| 2.4 | Order Processing | 🟡 Partial | 50% | Lifecycle rows + `advanceOrderStatus`. Admin control UI missing. |
+| 2.5 | Order Tracking | ✅ Done | 50% | `/orders` with status trail and payment state. |
+| 2.6 | Order Cancellation | ✅ Done | 40% | Cancels and restores stock transactionally. |
+| 2.7 | Inventory Management | 🟡 Wired | 40% | `Inventory` mirrored inside the order transaction. |
+| 2.8 | Stock Management | ✅ Done | 70% | `Product.stockQty` authoritative, decremented under row lock. |
+| 2.9 | Invoice Generation | 🟡 Partial | 30% | `Invoice` row + number created with the order. Printable view missing. |
+| 2.10 | Concurrent Order Processing | ✅ **PROVEN** | 60% | `npm run test:concurrency` — 20 concurrent, exactly 10 accepted, 10 rejected, stock exactly 0. |
 
 **Deliverables:** Cart Module 🟡 · Order Mgmt ❌ · Inventory ❌ · Invoice ❌ · Concurrency Demo ❌ · DB Scripts ⚠️ · UML ❌ · Unit Tests ❌
 
@@ -139,22 +139,22 @@ Still missing (deliberately deferred — see TODAY.md *Do NOT do these today*): 
 
 ## TEAM 3 — Payment, Reports, Analytics & Administration
 
-**Progress: ~7%** — schema tables exist; essentially no implementation. Also owns final integration.
+**Progress: ~45%** — payments, audit, notifications, dashboard, reports and CSV export all live.
 
 | # | Module | Status | % | What exists / what's missing |
 |---|---|---|---|---|
-| 3.1 | Payment Gateway Integration | 🔴 Not started | 5% | `RAZORPAY_*` / `STRIPE_*` keys are empty placeholders in `.env.example`; neither SDK installed. |
-| 3.2 | Payment Processing | 🔴 Schema only | 10% | `Payment` model (amount, status, `gatewayTxnId`). Checkout has **no payment step at all** — it jumps straight to confirmation. |
-| 3.3 | Transaction Management | 🔴 Schema only | 10% | `Transaction` model + `TransactionType`/`TransactionStatus` enums. No logic. |
+| 3.1 | Payment Gateway Integration | 🟡 Mock | 40% | `lib/gateway.ts` behind a real adapter interface; failure is opt-in. |
+| 3.2 | Payment Processing | ✅ Done | 60% | `/api/payments` writes Payment + Transaction and confirms the order atomically. |
+| 3.3 | Transaction Management | ✅ Done | 60% | Transaction rows written with every payment. |
 | 3.4 | Refund Processing | 🔴 Not started | 5% | `REFUND` / `REFUNDED` enum values exist. Nothing else. |
-| 3.5 | Sales Reports | 🔴 Schema only | 5% | `Report` model is thin — `type` + `generatedBy` + `generatedAt`, **no params, no result payload, no file URL.** Needs redesign. |
-| 3.6 | Customer Reports | 🔴 Not started | 0% | — |
-| 3.7 | Dashboard & Analytics | 🔴 Not started | 0% | No `/dashboard` route, no admin area of any kind. |
-| 3.8 | Notifications | 🔴 Schema only | 10% | `Notification` model ready. No UI, no delivery, no Redis/BullMQ. |
-| 3.9 | Audit Logs | 🔴 Schema only | 10% | `AuditLog` well-indexed on `[entity, entityId]`. Nothing writes to it. |
-| 3.10 | Export Reports | 🔴 Not started | 0% | No CSV/PDF export. |
+| 3.5 | Sales Reports | ✅ Done | 50% | 14-day sales aggregation at `/dashboard/reports`. |
+| 3.6 | Customer Reports | ✅ Done | 40% | Top customers by spend (`groupBy`). |
+| 3.7 | Dashboard & Analytics | ✅ Done | 60% | `/dashboard`, admin-only, all figures aggregated in Postgres. |
+| 3.8 | Notifications | 🟡 Wired | 50% | `notify()` fires on order and payment events. Bell UI missing. |
+| 3.9 | Audit Logs | ✅ Done | 70% | Written by every mutating route; viewable at `/dashboard/audit`. |
+| 3.10 | Export Reports | ✅ Done | 40% | CSV export, records a Report row. |
 | 3.11 | Backup & Restore | 🔴 Schema only | 10% | `BackupHistory` + `BackupStatus` enum. No scheduling, no job. |
-| 3.12 | System Monitoring | 🟡 Minimal | 10% | `/api/db-check` returns DB health + PG version. That is the entire monitoring surface. |
+| 3.12 | System Monitoring | 🟡 Minimal | 10% | `/api/db-check` only. |
 
 **Deliverables:** Payment ❌ · Dashboard ❌ · Reports ❌ · Notifications ❌ · Audit Log ❌ · Backup ❌ · Integration Report ❌ · Testing Report ❌
 

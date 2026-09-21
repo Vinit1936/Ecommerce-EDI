@@ -133,7 +133,21 @@ After Wave 0: **commit and push immediately**, then everyone branches off it.
 
 ---
 
-## WAVE 1 — Parallel tracks (~4 hrs)
+## WAVE 1 — Parallel tracks ✅ LARGELY COMPLETE
+
+> **Done and pushed.** The full vertical slice works end to end and is verified
+> by an automated run: login → SQL-filtered catalogue → database cart → atomic
+> order → stock decrement → payment → lifecycle trail → cancel/restore → RBAC
+> denial → admin dashboard → CSV export. 14/14 checks pass.
+>
+> **KPI #6 is proven:** `npm run test:concurrency` — 20 simultaneous orders
+> against stock of 10 → exactly 10 accepted, 10 rejected, final stock 0.
+>
+> Still open: admin product CRUD, reviews UI, wishlist UI, printable invoice,
+> notification bell, backup script. See CHECKLIST.md for the current per-module
+> state.
+
+### Original plan (~4 hrs)
 
 ### 🔵 TEAM 1 — Auth + real catalog → *target 55%*
 
