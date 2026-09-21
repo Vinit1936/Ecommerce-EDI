@@ -35,7 +35,8 @@ loadEnv();
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: process.env.DATABASE_URL || '',
-    directUrl: process.env.DIRECT_URL || '',
+    // CLI-only (migrate/studio). Prefer the unpooled DIRECT_URL for DDL;
+    // the runtime client connects via DATABASE_URL in src/lib/db.ts.
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL || '',
   },
 });
