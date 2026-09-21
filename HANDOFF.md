@@ -40,20 +40,23 @@ connected. Everything you see on screen comes from the real database.
 
 **Working end to end:**
 
-1. Sign up and log in (real accounts, passwords are hashed)
-2. Browse products — search, filter and sort are done by the database, not the browser
-3. Add to cart — the cart is saved in the database, so it survives a refresh
-4. Checkout — creates a real order and reduces stock
-5. Payment is recorded, order becomes CONFIRMED
-6. Order history page with status tracking and cancel (cancelling puts stock back)
-7. Admin dashboard with real sales figures, reports, audit log and CSV export
-8. Admins and customers see different things (customers get blocked from admin pages)
+1. Sign up and log in (real accounts, passwords are hashed with bcrypt)
+2. Browse products — search, filter, and sort are done by the database, not the browser
+3. Product detail page with live stock, sizes, and customer star reviews
+4. Wishlist — save items with the heart icon, manage at `/wishlist`, 1-click "Move to Bag"
+5. Add to cart — the cart is saved in the database, so it survives a refresh and device switch
+6. Checkout — creates a real order and atomically reduces stock
+7. Payment is recorded in financial ledger, order becomes CONFIRMED
+8. Order history page with status tracking, cancel (cancelling puts stock back and issues refund), and printable invoice
+9. Real-time notifications bell in header showing order and fulfillment alerts
+10. Admin dashboard with real sales figures, reports, audit log, CSV export, order fulfillment, and DB health latency monitor
+11. Admins and customers see different things (customers get blocked from admin pages)
 
 **Proof it works:** run `npm run test:concurrency`. It fires 20 orders at the
 same time for a product with only 10 in stock. Exactly 10 succeed, 10 are
 rejected, and stock lands on exactly 0. This is KPI #6 and it passes.
 
-**Rough progress:** Team 1 ~60%, Team 2 ~60%, Team 3 ~45%.
+**Progress achieved for Review 1:** Team 1 ~75%, Team 2 ~75%, Team 3 ~75%.
 
 ---
 
