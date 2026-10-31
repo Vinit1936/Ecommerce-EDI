@@ -6,7 +6,7 @@
  * pushes the same logic into Postgres so it still works past 12 rows.
  */
 import prisma from '@/lib/db';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import type { BrandRef, CategoryRef, Product, ProductColor, ProductQuery } from '@/lib/types';
 
 /** Shape returned by every query below, so the mapper always has what it needs. */
@@ -150,12 +150,291 @@ export async function listCategories(): Promise<CategoryRef[]> {
   return prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } });
 }
 
+export interface CategoryWithHierarchy {
+  id: string;
+  name: string;
+  parentCategoryId: string | null;
+  parentCategoryName: string | null;
+  productCount: number;
+  childCount: number;
+  createdAt: Date;
+}
+
+export async function listCategoriesWithHierarchy(): Promise<CategoryWithHierarchy[]> {
+  const rows = await prisma.category.findMany({
+    include: {
+      parentCategory: { select: { name: true } },
+      _count: { select: { products: true, childCategories: true } },
+    },
+    orderBy: { name: 'asc' },
+  });
+
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    parentCategoryId: r.parentCategoryId,
+    parentCategoryName: r.parentCategory?.name ?? null,
+    productCount: r._count.products,
+    childCount: r._count.childCategories,
+    createdAt: r.createdAt,
+  }));
+}
+
+export async function createCategory(input: { name: string; parentCategoryId?: string | null }) {
+  return prisma.category.create({
+    data: {
+      name: input.name.trim(),
+      parentCategoryId: input.parentCategoryId || null,
+    },
+  });
+}
+
+export async function updateCategory(
+  id: string,
+  input: { name?: string; parentCategoryId?: string | null }
+) {
+  if (input.parentCategoryId === id) {
+    throw new Error('A category cannot be its own parent');
+  }
+  return prisma.category.update({
+    where: { id },
+    data: {
+      ...(input.name ? { name: input.name.trim() } : {}),
+      ...(input.parentCategoryId !== undefined ? { parentCategoryId: input.parentCategoryId } : {}),
+    },
+  });
+}
+
+export async function deleteCategory(id: string) {
+  const [productsCount, childCount] = await Promise.all([
+    prisma.product.count({ where: { categoryId: id } }),
+    prisma.category.count({ where: { parentCategoryId: id } }),
+  ]);
+
+  if (productsCount > 0) {
+    throw new Error(`Cannot delete category: ${productsCount} product(s) are assigned to it`);
+  }
+  if (childCount > 0) {
+    throw new Error(`Cannot delete category: ${childCount} subcategory(ies) are nested under it`);
+  }
+
+  return prisma.category.delete({ where: { id } });
+}
+
+export interface BrandWithCount {
+  id: string;
+  name: string;
+  productCount: number;
+  createdAt: Date;
+}
+
 export async function listBrands(): Promise<BrandRef[]> {
   return prisma.brand.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } });
+}
+
+export async function listBrandsWithCounts(): Promise<BrandWithCount[]> {
+  const rows = await prisma.brand.findMany({
+    include: {
+      _count: { select: { products: true } },
+    },
+    orderBy: { name: 'asc' },
+  });
+
+  return rows.map((b) => ({
+    id: b.id,
+    name: b.name,
+    productCount: b._count.products,
+    createdAt: b.createdAt,
+  }));
+}
+
+export async function createBrand(input: { name: string }) {
+  return prisma.brand.create({
+    data: { name: input.name.trim() },
+  });
+}
+
+export async function updateBrand(id: string, input: { name: string }) {
+  return prisma.brand.update({
+    where: { id },
+    data: { name: input.name.trim() },
+  });
+}
+
+export async function deleteBrand(id: string) {
+  const productsCount = await prisma.product.count({ where: { brandId: id } });
+  if (productsCount > 0) {
+    throw new Error(`Cannot delete brand: ${productsCount} product(s) are assigned to it`);
+  }
+  return prisma.brand.delete({ where: { id } });
 }
 
 /** Category names prefixed with ALL — matches the existing filter bar. */
 export async function listCategoryNames(): Promise<string[]> {
   const categories = await listCategories();
   return ['ALL', ...categories.map((c) => c.name)];
+}
+
+export interface CreateProductInput {
+  sku: string;
+  specimenNo?: string;
+  name: string;
+  description?: string;
+  details?: string[];
+  images?: string[];
+  price: number;
+  originalPrice?: number | null;
+  sizes?: string[];
+  colors?: ProductColor[] | null;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isSale?: boolean;
+  heroSpan?: 'full' | 'half' | 'quarter' | null;
+  stockQty?: number;
+  categoryId: string;
+  brandId: string;
+}
+
+export interface UpdateProductInput {
+  sku?: string;
+  specimenNo?: string;
+  name?: string;
+  description?: string | null;
+  details?: string[];
+  images?: string[];
+  price?: number;
+  originalPrice?: number | null;
+  sizes?: string[];
+  colors?: ProductColor[] | null;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isSale?: boolean;
+  heroSpan?: 'full' | 'half' | 'quarter' | null;
+  stockQty?: number;
+  categoryId?: string;
+  brandId?: string;
+}
+
+/** Admin: Create a new product and matching inventory record. */
+export async function createProduct(input: CreateProductInput): Promise<Product> {
+  return prisma.$transaction(async (tx) => {
+    const warehouse = (await tx.warehouse.findFirst()) ?? {
+      id: '00000000-0000-4000-8000-000000000001',
+    };
+
+    const row = await tx.product.create({
+      data: {
+        sku: input.sku.toLowerCase().trim(),
+        specimenNo: input.specimenNo?.trim() || `Specimen No. ${input.sku.toUpperCase().trim()}`,
+        name: input.name.trim(),
+        description: input.description?.trim() || null,
+        details: input.details ?? [],
+        images: input.images ?? [],
+        price: input.price,
+        originalPrice: input.originalPrice ?? null,
+        sizes: input.sizes ?? [],
+        colors: input.colors ? (input.colors as unknown as Prisma.InputJsonValue) : undefined,
+        isFeatured: input.isFeatured ?? false,
+        isNew: input.isNew ?? false,
+        isSale: input.isSale ?? false,
+        heroSpan: input.heroSpan ?? null,
+        stockQty: input.stockQty ?? 0,
+        categoryId: input.categoryId,
+        brandId: input.brandId,
+      },
+      include: productInclude,
+    });
+
+    await tx.inventory.create({
+      data: {
+        productId: row.id,
+        warehouseId: warehouse.id,
+        quantityAvailable: input.stockQty ?? 0,
+      },
+    });
+
+    return toProduct(row);
+  });
+}
+
+/** Admin: Update an existing product and synchronize inventory stock. */
+export async function updateProduct(id: string, input: UpdateProductInput): Promise<Product> {
+  return prisma.$transaction(async (tx) => {
+    const data: Prisma.ProductUpdateInput = {};
+
+    if (input.sku !== undefined) data.sku = input.sku.toLowerCase().trim();
+    if (input.specimenNo !== undefined) data.specimenNo = input.specimenNo.trim();
+    if (input.name !== undefined) data.name = input.name.trim();
+    if (input.description !== undefined) {
+      data.description = input.description ? input.description.trim() : null;
+    }
+    if (input.details !== undefined) data.details = input.details;
+    if (input.images !== undefined) data.images = input.images;
+    if (input.price !== undefined) data.price = input.price;
+    if (input.originalPrice !== undefined) data.originalPrice = input.originalPrice;
+    if (input.sizes !== undefined) data.sizes = input.sizes;
+    if (input.colors !== undefined) {
+      data.colors = input.colors
+        ? (input.colors as unknown as Prisma.InputJsonValue)
+        : Prisma.JsonNull;
+    }
+    if (input.isFeatured !== undefined) data.isFeatured = input.isFeatured;
+    if (input.isNew !== undefined) data.isNew = input.isNew;
+    if (input.isSale !== undefined) data.isSale = input.isSale;
+    if (input.heroSpan !== undefined) data.heroSpan = input.heroSpan;
+    if (input.stockQty !== undefined) data.stockQty = input.stockQty;
+    if (input.categoryId !== undefined) data.category = { connect: { id: input.categoryId } };
+    if (input.brandId !== undefined) data.brand = { connect: { id: input.brandId } };
+
+    const row = await tx.product.update({
+      where: { id },
+      data,
+      include: productInclude,
+    });
+
+    if (input.stockQty !== undefined) {
+      await tx.inventory.updateMany({
+        where: { productId: id },
+        data: { quantityAvailable: input.stockQty },
+      });
+    }
+
+    return toProduct(row);
+  });
+}
+
+/** Admin: Safely delete or deactivate a product with referential checks. */
+export async function deleteProduct(
+  id: string
+): Promise<{ deleted: boolean; deactivated?: boolean; message?: string }> {
+  return prisma.$transaction(async (tx) => {
+    // Check if product is referenced in order_items
+    const orderCount = await tx.orderItem.count({ where: { productId: id } });
+
+    if (orderCount > 0) {
+      // Cannot delete; retire product safely to maintain historical ledger
+      await tx.product.update({
+        where: { id },
+        data: { stockQty: 0, isFeatured: false },
+      });
+      await tx.inventory.updateMany({
+        where: { productId: id },
+        data: { quantityAvailable: 0 },
+      });
+      return {
+        deleted: false,
+        deactivated: true,
+        message: 'Product has historical orders. Stock zeroed and deactivated to preserve order integrity.',
+      };
+    }
+
+    // Safe to delete completely
+    await tx.cart.deleteMany({ where: { productId: id } });
+    await tx.wishlist.deleteMany({ where: { productId: id } });
+    await tx.productReview.deleteMany({ where: { productId: id } });
+    await tx.inventory.deleteMany({ where: { productId: id } });
+    await tx.product.delete({ where: { id } });
+
+    return { deleted: true };
+  });
 }

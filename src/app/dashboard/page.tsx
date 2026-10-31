@@ -85,6 +85,15 @@ export default async function DashboardPage() {
           DASHBOARD
         </h1>
         <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-wider">
+          <Link href="/dashboard/products" className="hover:underline">
+            PRODUCTS ↗
+          </Link>
+          <Link href="/dashboard/categories" className="hover:underline">
+            CATEGORIES ↗
+          </Link>
+          <Link href="/dashboard/brands" className="hover:underline">
+            BRANDS ↗
+          </Link>
           <Link href="/dashboard/orders" className="hover:underline">
             ORDERS ↗
           </Link>
@@ -157,9 +166,17 @@ export default async function DashboardPage() {
 
         {/* Low stock */}
         <section className="lg:col-span-5 hairline-all p-6 space-y-3">
-          <h2 className="font-display-grotesk font-black text-xl uppercase tracking-tight hairline-b pb-3">
-            LOW STOCK
-          </h2>
+          <div className="flex items-center justify-between hairline-b pb-3">
+            <h2 className="font-display-grotesk font-black text-xl uppercase tracking-tight">
+              LOW STOCK
+            </h2>
+            <Link
+              href="/dashboard/products"
+              className="text-[10px] font-bold uppercase tracking-wider text-[#F0301A] hover:underline"
+            >
+              MANAGE CATALOG ↗
+            </Link>
+          </div>
           {stats.lowStock.length === 0 ? (
             <p className="font-sans text-sm text-[#161412]/60">Everything is comfortably stocked.</p>
           ) : (

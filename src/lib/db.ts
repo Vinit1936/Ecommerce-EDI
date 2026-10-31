@@ -2,6 +2,26 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { neon, Pool } from '@neondatabase/serverless';
 
+import fs from 'node:fs';
+import path from 'node:path';
+
+if (!process.env.DATABASE_URL) {
+  for (const file of ['.env.local', '.env']) {
+    const full = path.resolve(/*turbopackIgnore: true*/ process.cwd(), file);
+    if (!fs.existsSync(full)) continue;
+    for (const line of fs.readFileSync(full, 'utf8').split('\n')) {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) continue;
+      const i = t.indexOf('=');
+      if (i === -1) continue;
+      const k = t.slice(0, i).trim();
+      let v = t.slice(i + 1).trim();
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+      if (!process.env[k]) process.env[k] = v;
+    }
+  }
+}
+
 const databaseUrl = process.env.DATABASE_URL || '';
 
 const globalForPrisma = globalThis as unknown as {
