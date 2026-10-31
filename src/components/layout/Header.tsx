@@ -66,6 +66,14 @@ export function Header() {
           {session?.user ? (
             <>
               <Link
+                href="/account"
+                className={`relative py-1 hover:opacity-85 hidden sm:inline-block ${
+                  pathname.startsWith('/account') ? 'border-b-2 border-[#F0301A]' : ''
+                }`}
+              >
+                Account
+              </Link>
+              <Link
                 href="/orders"
                 className={`relative py-1 hover:opacity-85 hidden sm:inline-block ${
                   pathname.startsWith('/orders') ? 'border-b-2 border-[#F0301A]' : ''
