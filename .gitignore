@@ -38,6 +38,7 @@ yarn-error.log*
 
 # generated tooling instructions (recreated locally, not part of the project)
 AGENTS.md
+CLAUDE.md
 
 # vercel
 .vercel
