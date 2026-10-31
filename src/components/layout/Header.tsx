@@ -14,6 +14,7 @@ export function Header() {
   const { totalItemsCount } = useCart();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === 'ADMIN';
+  const isVendor = session?.user?.role === 'VENDOR';
 
   const isShopActive = pathname === '/shop' || pathname.startsWith('/product/');
   const isBagActive = pathname === '/cart';
@@ -57,10 +58,22 @@ export function Header() {
             <Link
               href="/dashboard"
               className={`relative py-1 hover:opacity-85 hidden md:inline-block ${
-                pathname.startsWith('/dashboard') ? 'border-b-2 border-[#F0301A]' : ''
+                pathname === '/dashboard' || (pathname.startsWith('/dashboard/') && !pathname.startsWith('/dashboard/vendor'))
+                  ? 'border-b-2 border-[#F0301A]'
+                  : ''
               }`}
             >
               Dashboard
+            </Link>
+          )}
+          {(isVendor || isAdmin) && (
+            <Link
+              href="/dashboard/vendor"
+              className={`relative py-1 hover:opacity-85 hidden md:inline-block ${
+                pathname.startsWith('/dashboard/vendor') ? 'border-b-2 border-[#F0301A]' : ''
+              }`}
+            >
+              Vendor Portal
             </Link>
           )}
           {session?.user ? (

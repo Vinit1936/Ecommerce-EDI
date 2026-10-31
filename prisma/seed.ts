@@ -482,12 +482,19 @@ async function main() {
   // --- Demo accounts -----------------------------------------------------
   const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'ADMIN' } });
   const customerRole = await prisma.role.findUniqueOrThrow({ where: { name: 'CUSTOMER' } });
+  const vendorRole = await prisma.role.findUniqueOrThrow({ where: { name: 'VENDOR' } });
   const passwordHash = await bcrypt.hash('Password123!', 10);
 
   await prisma.user.upsert({
     where: { email: 'admin@hellohello.studio' },
     update: { passwordHash, roleId: adminRole.id },
     create: { email: 'admin@hellohello.studio', passwordHash, roleId: adminRole.id },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'vendor@hellohello.studio' },
+    update: { passwordHash, roleId: vendorRole.id },
+    create: { email: 'vendor@hellohello.studio', passwordHash, roleId: vendorRole.id },
   });
 
   const customerUser = await prisma.user.upsert({
@@ -510,11 +517,12 @@ async function main() {
       country: 'PORTUGAL',
     },
   });
-  console.log('  users          2');
+  console.log('  users          3');
   console.log('  customers      1');
 
-  console.log('\nDemo accounts (password for both: Password123!)');
+  console.log('\nDemo accounts (password for all: Password123!)');
   console.log('  admin@hellohello.studio      ADMIN');
+  console.log('  vendor@hellohello.studio     VENDOR');
   console.log('  customer@hellohello.studio   CUSTOMER');
   console.log('\nSeed complete.\n');
 }

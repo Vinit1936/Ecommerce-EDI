@@ -52,6 +52,10 @@ export default async function DashboardPage() {
 
   // proxy.ts only checks that a session cookie exists; the role check has to
   // happen here, where the database is reachable.
+  if (session.user.role === 'VENDOR') {
+    redirect('/dashboard/vendor');
+  }
+
   if (session.user.role !== 'ADMIN') {
     return (
       <div className="min-h-screen max-w-3xl mx-auto px-4 pt-20 pb-24 text-[#F0301A]">
@@ -96,6 +100,9 @@ export default async function DashboardPage() {
           </Link>
           <Link href="/dashboard/customers" className="hover:underline">
             CUSTOMERS ↗
+          </Link>
+          <Link href="/dashboard/vendor" className="hover:underline">
+            VENDOR PORTAL ↗
           </Link>
           <Link href="/dashboard/orders" className="hover:underline">
             ORDERS ↗

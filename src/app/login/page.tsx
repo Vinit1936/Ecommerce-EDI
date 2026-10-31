@@ -103,6 +103,45 @@ function LoginContent() {
               </ActionLink>
             </div>
 
+            {/* Quick Demo Role Autofill */}
+            <div className="hairline-t pt-4 space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#F0301A]/70">
+                QUICK DEMO CREDENTIALS (CLICK TO FILL)
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('admin@hellohello.studio');
+                    setPassword('Password123!');
+                  }}
+                  className="px-2 py-1.5 hairline-all text-[9px] font-bold uppercase tracking-wider hover:bg-[#F0301A] hover:text-[#EFE7DC] transition-colors"
+                >
+                  ADMIN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('vendor@hellohello.studio');
+                    setPassword('Password123!');
+                  }}
+                  className="px-2 py-1.5 hairline-all text-[9px] font-bold uppercase tracking-wider hover:bg-[#F0301A] hover:text-[#EFE7DC] transition-colors"
+                >
+                  VENDOR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('customer@hellohello.studio');
+                    setPassword('Password123!');
+                  }}
+                  className="px-2 py-1.5 hairline-all text-[9px] font-bold uppercase tracking-wider hover:bg-[#F0301A] hover:text-[#EFE7DC] transition-colors"
+                >
+                  CUSTOMER
+                </button>
+              </div>
+            </div>
+
             <div className="hairline-t pt-4 text-center text-xs font-sans text-[#161412]">
               Don&apos;t have an account?{' '}
               <Link href="/signup" className="font-display-grotesk font-bold text-[#F0301A] uppercase underline">
