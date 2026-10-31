@@ -119,6 +119,9 @@ export default async function DashboardPage() {
           <Link href="/dashboard/health" className="hover:underline">
             HEALTH &amp; STATUS ↗
           </Link>
+          <Link href="/dashboard/backup" className="hover:underline">
+            BACKUPS ↗
+          </Link>
           <a href="/api/reports/export" className="hover:underline">
             EXPORT CSV ↓
           </a>

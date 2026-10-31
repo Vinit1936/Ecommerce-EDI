@@ -140,7 +140,7 @@ Before beginning development, all teams must jointly finalize the following foun
 | **3.8** | **Notifications** | ✅ **DONE** | **90%** | `notify()` helper writes to `notifications` table on order events. `NotificationBell` in Header displays live count and unread notifications with mark-as-read action. | Add browser push notifications or email dispatch. |
 | **3.9** | **Audit Logs** | ✅ **DONE** | **90%** | `recordAudit()` called across all mutations (register, orders, cancellations, status changes). `/dashboard/audit` provides filtering by entity and action. | Add audit log export to CSV. |
 | **3.10** | **Export Reports** | ✅ **DONE** | **85%** | `/api/reports/export` streams sales report data directly as CSV with proper headers and records `Report` row in DB. | Support exporting inventory and order tables to CSV. |
-| **3.11** | **Backup & Restore** | ⚠️ **PARTIAL** | **70%** | `scripts/backup.ts` generates database SQL snapshots into `backups/` and logs entries in `backup_histories`. | **Missing restore script (`scripts/restore.ts`)** and **Admin Backup UI (`/dashboard/backup`)** to trigger snapshots and download files. |
+| **3.11** | **Backup & Restore** | ✅ **DONE** | **100%** | Full backup engine (`src/lib/backup.ts`), disaster recovery restore engine (`scripts/restore.ts`), OS cron scheduler daemon (`scripts/backup-cron.ts`), download endpoint (`/api/admin/backup/[id]/download`), and interactive admin dashboard at `/dashboard/backup`. Verified via `scripts/test-backup-restore.ts`. | None. Fully complete. |
 | **3.12** | **System Monitoring** | ✅ **DONE** | **85%** | `/api/admin/health` and `/dashboard/health` show database round-trip latency, table row counts, server uptime, and environment health. | Add alert triggers when DB latency exceeds 1000ms. |
 
 ### Team 3 Database Tables:
@@ -152,12 +152,12 @@ Before beginning development, all teams must jointly finalize the following foun
 - `backup_histories`: ✅ Modelled & active
 
 ### Team 3 Deliverables:
-- Payment Module: ✅ **DONE** (Mock ready; needs sandbox gateway)
+- Payment Module: ✅ **DONE** (Real Sandbox & Webhook Security Complete)
 - Dashboard: ✅ **DONE**
 - Reports Module: ✅ **DONE**
 - Notification Module: ✅ **DONE**
 - Audit Log Module: ✅ **DONE**
-- Backup & Restore Module: ⚠️ **PARTIAL** (Needs restore script & UI)
+- Backup & Restore Module: ✅ **DONE**
 - Integration Report: ❌ **MISSING** (`docs/INTEGRATION_REPORT.md`)
 - Testing Report: ❌ **MISSING** (`docs/TESTING_REPORT.md`)
 
