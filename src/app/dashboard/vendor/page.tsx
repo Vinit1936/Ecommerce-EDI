@@ -275,6 +275,7 @@ export default function VendorDashboardPage() {
                                 src={p.images[0]}
                                 alt={p.name}
                                 fill
+                                sizes="40px"
                                 className="object-cover"
                               />
                             </div>

@@ -230,12 +230,12 @@ export async function restoreDatabaseSnapshot(snapshotInput: string | object): P
   if (typeof snapshotInput === 'string') {
     let resolvedPath = snapshotInput;
     if (!path.isAbsolute(resolvedPath)) {
-      resolvedPath = path.resolve(process.cwd(), snapshotInput);
+      resolvedPath = path.resolve(/*turbopackIgnore: true*/ process.cwd(), snapshotInput);
     }
-    if (!fs.existsSync(resolvedPath)) {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ resolvedPath)) {
       throw new Error(`Snapshot archive not found at: ${resolvedPath}`);
     }
-    const raw = fs.readFileSync(resolvedPath, 'utf8');
+    const raw = fs.readFileSync(/*turbopackIgnore: true*/ resolvedPath, 'utf8');
     snapshotData = JSON.parse(raw);
   } else {
     snapshotData = snapshotInput as typeof snapshotData;
