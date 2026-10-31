@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Product, CategoryRef, BrandRef } from '@/lib/types';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 interface ProductFormData {
   id?: string;
@@ -676,15 +677,10 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#F0301A] mb-1">
-                  IMAGE URLS (COMMA SEPARATED)
-                </label>
-                <input
-                  type="text"
-                  value={form.images}
-                  onChange={(e) => setForm({ ...form, images: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full bg-[#FFFFFF] border border-[#F0301A]/30 p-2 font-mono text-[11px] focus:outline-none focus:border-[#F0301A]"
+                <ImageUpload
+                  images={form.images ? form.images.split(',').map((s) => s.trim()).filter(Boolean) : []}
+                  onChange={(urls) => setForm({ ...form, images: urls.join(', ') })}
+                  maxFiles={5}
                 />
               </div>
 

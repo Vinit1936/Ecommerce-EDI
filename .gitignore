@@ -49,3 +49,7 @@ prompt.md
 reviewone.md
 steps.md
 
+# uploads
+/public/uploads/products/*
+!/public/uploads/products/.gitkeep
+

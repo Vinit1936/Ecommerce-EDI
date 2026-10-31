@@ -58,7 +58,7 @@ Before beginning development, all teams must jointly finalize the following foun
 | **1.7** | **Brand Management** | ✅ **DONE** | **100%** | Full Brand management at `/dashboard/brands` with product count allocations, CRUD API, foreign-key safety, and audit logging. | None. Fully complete. |
 | **1.8** | **Product Search** | ✅ **DONE** | **90%** | Server-side debounced search (`?q=`), category filtering, brand filtering, price sorting (`asc`/`desc`), and stock filtering running as SQL queries. | Add pagination / infinite scrolling for large catalogs. |
 | **1.9** | **Product Reviews & Ratings** | ✅ **DONE** | **90%** | `POST/GET /api/reviews`, compound unique constraint `@@unique([productId, customerId])` prevents duplicate reviews, star rating widget, appraisal form on PDP. | Add admin review moderation/deletion capability. |
-| **1.10** | **Product Image Management** | ⚠️ **PARTIAL** | **40%** | `images[]` text array in DB, rendered in multi-image gallery on PDP. | **Missing File Upload Engine:** Implement `POST /api/upload` handling physical multipart image uploads to `public/uploads/` (satisfies OS file handling requirement). |
+| **1.10** | **Product Image Management** | ✅ **DONE** | **100%** | Multipart upload endpoint at `POST/DELETE /api/upload`, magic-byte binary inspection, 5MB limit, physical disk storage in `public/uploads/products/`, `ImageUpload` component integrated into admin product modal, and orphan cleaner script (`scripts/cleanup-orphaned-uploads.ts`). | None. Fully complete. |
 
 ### Team 1 Database Tables:
 - `users`: ✅ Modelled & active
@@ -184,7 +184,7 @@ The academic syllabus requires specific technical concepts demonstrated across 8
 | **Computer Networks** | Client-server login request handling | T1 | ✅ **DONE** | NextAuth HTTP REST endpoints with secure cookies. |
 | **Computer Networks** | Multi-user order request handling | T2 | ✅ **DONE** | Concurrent HTTP request processing via Next.js server. |
 | **Computer Networks** | Secure payment gateway communication | T3 | ⚠️ **PARTIAL** | Add webhook signature verification demo (HMAC SHA-256). |
-| **Operating Systems** | Product image and file management | T1 | ⚠️ **PARTIAL** | File system I/O, permissions, and directory structure in `/public/uploads`. |
+| **Operating Systems** | Product image and file management | T1 | ✅ **DONE** | Physical disk I/O, permissions, magic-byte inspection, upload/unlink APIs, and orphan storage purge script. |
 | **Operating Systems** | Thread synchronization for concurrent order processing | T2 | ✅ **DONE** | PostgreSQL `SELECT ... FOR UPDATE` row locks acting as critical section mutex. |
 | **Operating Systems** | Backup scheduling and log management | T3 | ⚠️ **PARTIAL** | Backup script exists; add cron scheduler simulation script (`scripts/backup-cron.ts`). |
 | **Software Engineering** | SRS, Use Case Diagram, Class Diagram | T1 | ❌ **MISSING** | Generate `docs/SRS.md`, `docs/USE_CASE_DIAGRAM.md`, `docs/CLASS_DIAGRAM.md`. |
