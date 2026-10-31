@@ -168,24 +168,24 @@ The academic syllabus requires specific technical concepts demonstrated across 8
 
 | Subject | Expected Implementation (from PDF) | Team | Current Status | What Needs to be Shown |
 |---|---|---|---|---|
-| **Basic Programming** | Modular program design, product validation, file handling | T1 | ⚠️ **PARTIAL** | Add physical file upload (`/api/upload`) with MIME validation. |
+| **Basic Programming** | Modular program design, product validation, file handling | T1 | ✅ **DONE** | Validated in `src/app/api/upload/route.ts` with binary magic-byte inspection and UUID storage. |
 | **Basic Programming** | Order processing and inventory update logic | T2 | ✅ **DONE** | Validated in `src/lib/orders.ts`. |
 | **Basic Programming** | Payment validation and report generation | T3 | ✅ **DONE** | Validated in `src/lib/gateway.ts` and `src/lib/stats.ts`. |
-| **Object-Oriented Programming** | `User`, `Customer`, `Product`, `Category`, `Brand` classes | T1 | ⚠️ **PARTIAL** | Implement formal domain classes in `src/domain/` with encapsulation. |
-| **Object-Oriented Programming** | `Cart`, `Order`, `Inventory`, `Invoice` classes | T2 | ⚠️ **PARTIAL** | Implement formal domain classes in `src/domain/`. |
-| **Object-Oriented Programming** | `Payment`, `Transaction`, `Report`, `Notification` classes | T3 | ⚠️ **PARTIAL** | Implement formal domain classes in `src/domain/`. |
-| **Data Structures** | Arrays/Linked Lists for product storage and searching | T1 | ⚠️ **PARTIAL** | Implement in-memory Search Trie / Priority Queue in `src/structures/ProductTrie.ts`. |
-| **Data Structures** | Queue/Linked List for order processing | T2 | ⚠️ **PARTIAL** | Implement FIFO Order Processing Queue in `src/structures/OrderQueue.ts`. |
-| **Data Structures** | Queue/Stack for payment requests and notifications | T3 | ⚠️ **PARTIAL** | Implement LIFO Notification Stack in `src/structures/NotificationStack.ts`. |
+| **Object-Oriented Programming** | `User`, `Customer`, `Product`, `Category`, `Brand` classes | T1 | ✅ **DONE** | Formal domain classes in `src/domain/team1.ts` with encapsulation, getters, and business methods. |
+| **Object-Oriented Programming** | `Cart`, `Order`, `Inventory`, `Invoice` classes | T2 | ✅ **DONE** | Formal domain classes in `src/domain/team2.ts` with inventory conservation and state machines. |
+| **Object-Oriented Programming** | `Payment`, `Transaction`, `Report`, `Notification` classes | T3 | ✅ **DONE** | Formal domain classes in `src/domain/team3.ts` with double-entry ledger balance and CSV exports. |
+| **Data Structures** | Arrays/Linked Lists for product storage and searching | T1 | ✅ **DONE** | In-memory Prefix Search Trie (`src/structures/ProductTrie.ts`) with O(L) autocomplete and prefix resolution. |
+| **Data Structures** | Queue/Linked List for order processing | T2 | ✅ **DONE** | Classical FIFO Order Queue (`src/structures/OrderQueue.ts`) with O(1) linked-node batch dispatch. |
+| **Data Structures** | Queue/Stack for payment requests and notifications | T3 | ✅ **DONE** | Classical LIFO Notification Stack (`src/structures/NotificationStack.ts`) with O(1) event telemetry drain. |
 | **DBMS** | CRUD operations, SQL queries, constraints | T1 | ✅ **DONE** | PostgreSQL migrations, foreign keys, cascade rules, indexes. |
 | **DBMS** | Order and Inventory CRUD operations | T2 | ✅ **DONE** | Transactional order writes and inventory updates. |
 | **DBMS** | Transaction management, aggregate queries, report generation | T3 | ✅ **DONE** | Serializable `$transaction`, Prisma aggregations (`_sum`, `groupBy`). |
 | **Computer Networks** | Client-server login request handling | T1 | ✅ **DONE** | NextAuth HTTP REST endpoints with secure cookies. |
 | **Computer Networks** | Multi-user order request handling | T2 | ✅ **DONE** | Concurrent HTTP request processing via Next.js server. |
-| **Computer Networks** | Secure payment gateway communication | T3 | ⚠️ **PARTIAL** | Add webhook signature verification demo (HMAC SHA-256). |
+| **Computer Networks** | Secure payment gateway communication | T3 | ✅ **DONE** | Cryptographic HMAC SHA-256 webhook signature validation and sandbox adapter in `src/lib/gateway/razorpay.ts`. |
 | **Operating Systems** | Product image and file management | T1 | ✅ **DONE** | Physical disk I/O, permissions, magic-byte inspection, upload/unlink APIs, and orphan storage purge script. |
 | **Operating Systems** | Thread synchronization for concurrent order processing | T2 | ✅ **DONE** | PostgreSQL `SELECT ... FOR UPDATE` row locks acting as critical section mutex. |
-| **Operating Systems** | Backup scheduling and log management | T3 | ⚠️ **PARTIAL** | Backup script exists; add cron scheduler simulation script (`scripts/backup-cron.ts`). |
+| **Operating Systems** | Backup scheduling and log management | T3 | ✅ **DONE** | Automated scheduler daemon with snapshot retention and rotation (`scripts/backup-cron.ts`). |
 | **Software Engineering** | SRS, Use Case Diagram, Class Diagram | T1 | ❌ **MISSING** | Generate `docs/SRS.md`, `docs/USE_CASE_DIAGRAM.md`, `docs/CLASS_DIAGRAM.md`. |
 | **Software Engineering** | Activity Diagram, Sequence Diagram | T2 | ❌ **MISSING** | Generate `docs/ACTIVITY_DIAGRAM.md`, `docs/SEQUENCE_DIAGRAM.md`. |
 | **Software Engineering** | Integration Testing, Documentation | T3 | ❌ **MISSING** | Generate `docs/INTEGRATION_REPORT.md`, `docs/TESTING_REPORT.md`. |
