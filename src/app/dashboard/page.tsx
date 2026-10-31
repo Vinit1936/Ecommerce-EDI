@@ -92,6 +92,9 @@ export default async function DashboardPage() {
           <Link href="/dashboard/products" className="hover:underline">
             PRODUCTS ↗
           </Link>
+          <Link href="/dashboard/inventory" className="hover:underline">
+            INVENTORY ↗
+          </Link>
           <Link href="/dashboard/categories" className="hover:underline">
             CATEGORIES ↗
           </Link>
@@ -181,10 +184,10 @@ export default async function DashboardPage() {
               LOW STOCK
             </h2>
             <Link
-              href="/dashboard/products"
+              href="/dashboard/inventory"
               className="text-[10px] font-bold uppercase tracking-wider text-[#F0301A] hover:underline"
             >
-              MANAGE CATALOG ↗
+              WAREHOUSE CONTROL ↗
             </Link>
           </div>
           {stats.lowStock.length === 0 ? (

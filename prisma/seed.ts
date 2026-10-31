@@ -58,7 +58,11 @@ const BRAND = {
   BERLIN: '22222222-0000-4000-8000-000000000004',
 } as const;
 
-const WAREHOUSE_ID = '33333333-0000-4000-8000-000000000001';
+const WAREHOUSE = {
+  PORTO: '33333333-0000-4000-8000-000000000001',
+  BERLIN: '33333333-0000-4000-8000-000000000002',
+  OSAKA: '33333333-0000-4000-8000-000000000003',
+} as const;
 
 type SeedProduct = {
   sku: string;
@@ -434,15 +438,23 @@ async function main() {
   }
   console.log(`  brands         ${Object.keys(brandNames).length}`);
 
-  // --- Warehouse ---------------------------------------------------------
-  await prisma.warehouse.upsert({
-    where: { id: WAREHOUSE_ID },
-    update: {},
-    create: { id: WAREHOUSE_ID, name: 'PORTO CENTRAL', location: 'Rua dos Clerigos 88, Porto, Portugal' },
-  });
-  console.log('  warehouses     1');
+  // --- Warehouses --------------------------------------------------------
+  const warehouseData = [
+    { id: WAREHOUSE.PORTO, name: 'PORTO CENTRAL', location: 'Rua dos Clerigos 88, Porto, Portugal' },
+    { id: WAREHOUSE.BERLIN, name: 'BERLIN NORTH HUB', location: 'Brunnenstraße 45, Berlin, Germany' },
+    { id: WAREHOUSE.OSAKA, name: 'OSAKA LOGISTICS DEPOT', location: 'Minami-ku 12-4, Osaka, Japan' },
+  ];
+  for (const w of warehouseData) {
+    await prisma.warehouse.upsert({
+      where: { id: w.id },
+      update: { name: w.name, location: w.location },
+      create: w,
+    });
+  }
+  console.log(`  warehouses     ${warehouseData.length}`);
 
   // --- Products + inventory ---------------------------------------------
+  let inventoryCount = 0;
   for (const p of PRODUCTS) {
     const data = {
       sku: p.sku,
@@ -469,15 +481,28 @@ async function main() {
       create: data,
     });
 
-    // Warehouse breakdown mirrors the authoritative Product.stockQty.
-    await prisma.inventory.upsert({
-      where: { productId_warehouseId: { productId: product.id, warehouseId: WAREHOUSE_ID } },
-      update: { quantityAvailable: p.stockQty },
-      create: { productId: product.id, warehouseId: WAREHOUSE_ID, quantityAvailable: p.stockQty },
-    });
+    // Multi-warehouse breakdown: exact sum equals authoritative Product.stockQty
+    const portoQty = Math.floor(p.stockQty * 0.7);
+    const berlinQty = Math.floor(p.stockQty * 0.2);
+    const osakaQty = p.stockQty - portoQty - berlinQty;
+
+    const allocations = [
+      { warehouseId: WAREHOUSE.PORTO, qty: portoQty },
+      { warehouseId: WAREHOUSE.BERLIN, qty: berlinQty },
+      { warehouseId: WAREHOUSE.OSAKA, qty: osakaQty },
+    ];
+
+    for (const alloc of allocations) {
+      await prisma.inventory.upsert({
+        where: { productId_warehouseId: { productId: product.id, warehouseId: alloc.warehouseId } },
+        update: { quantityAvailable: alloc.qty },
+        create: { productId: product.id, warehouseId: alloc.warehouseId, quantityAvailable: alloc.qty },
+      });
+      inventoryCount++;
+    }
   }
   console.log(`  products       ${PRODUCTS.length}`);
-  console.log(`  inventories    ${PRODUCTS.length}`);
+  console.log(`  inventories    ${inventoryCount}`);
 
   // --- Demo accounts -----------------------------------------------------
   const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: 'ADMIN' } });
