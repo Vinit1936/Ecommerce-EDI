@@ -155,6 +155,12 @@ export default async function OrdersPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <Link
+                    href={`/orders/${order.id}`}
+                    className="text-xs font-bold uppercase tracking-wider text-[#F0301A] underline hover:opacity-80"
+                  >
+                    TRACK TIMELINE ↗
+                  </Link>
+                  <Link
                     href={`/orders/${order.id}/invoice`}
                     className="text-xs font-bold uppercase tracking-wider text-[#F0301A] underline hover:opacity-80"
                   >
