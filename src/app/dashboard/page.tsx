@@ -94,6 +94,9 @@ export default async function DashboardPage() {
           <Link href="/dashboard/brands" className="hover:underline">
             BRANDS ↗
           </Link>
+          <Link href="/dashboard/customers" className="hover:underline">
+            CUSTOMERS ↗
+          </Link>
           <Link href="/dashboard/orders" className="hover:underline">
             ORDERS ↗
           </Link>

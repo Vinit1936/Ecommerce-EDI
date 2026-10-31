@@ -53,7 +53,7 @@ Before beginning development, all teams must jointly finalize the following foun
 | **1.1** | **User Registration** | ✅ **DONE** | **100%** | `POST /api/auth/register`, Zod input validation, bcrypt password hashing, atomic `User` + `Customer` creation, audit logged. Frontend `/signup` wired. | None. Fully complete. |
 | **1.2** | **Login Authentication** | ✅ **DONE** | **95%** | NextAuth v5 credentials provider, bcrypt comparison, secure HTTP-only JWT sessions carrying `role` and `customerId`. `/login` page wired. | Add lockout after repeated failed login attempts. |
 | **1.3** | **Role-Based Access Control (RBAC)** | ⚠️ **PARTIAL** | **70%** | 3 roles in DB (`CUSTOMER`, `ADMIN`, `VENDOR`). `src/proxy.ts` guards `/dashboard`. `requireRole('ADMIN')` guards admin APIs. Non-admins get 403 Forbidden. | **VENDOR role has no portal or permissions.** Account deactivation toggle (`isActive: false`) needs enforcement at login. |
-| **1.4** | **Customer Management** | ⚠️ **PARTIAL** | **40%** | `Customer` model holds address, city, phone, postal code. Auto-created on signup. | **Missing Customer Profile page (`/account`)** for updating addresses and password. **Missing Admin Customer Management view (`/dashboard/customers`)** to view/deactivate users. |
+| **1.4** | **Customer Management** | ✅ **DONE** | **100%** | Dedicated customer portal at `/account` (shipping address & password rotation), admin customer directory at `/dashboard/customers` (search, spend aggregation, status filters, suspend/activate account toggle with lockout guard), audit logged. | None. Fully complete. |
 | **1.5** | **Product Management** | ✅ **DONE** | **100%** | Catalog reads real PostgreSQL rows with full details, PDP `/product/[id]` dynamic, `/dashboard/products` admin CRUD UI live with Add/Edit/Delete, inventory sync, and audit logging. | None. Fully complete. |
 | **1.6** | **Category Management** | ✅ **DONE** | **100%** | Hierarchical category schema with self-referencing parents, `/dashboard/categories` UI, full CRUD API with foreign-key referential protection, and audit logging. | None. Fully complete. |
 | **1.7** | **Brand Management** | ✅ **DONE** | **100%** | Full Brand management at `/dashboard/brands` with product count allocations, CRUD API, foreign-key safety, and audit logging. | None. Fully complete. |
@@ -72,7 +72,7 @@ Before beginning development, all teams must jointly finalize the following foun
 
 ### Team 1 Deliverables:
 - Login Module: ✅ **DONE**
-- Customer Management Module: ⚠️ **PARTIAL** (Needs `/account` and `/dashboard/customers`)
+- Customer Management Module: ✅ **DONE** (`/account` self-service + `/dashboard/customers` admin directory)
 - Product Management Module: ✅ **DONE** (Full CRUD UI at `/dashboard/products` + API + Audit)
 - Category Module: ✅ **DONE** (Hierarchy + CRUD UI at `/dashboard/categories` + API)
 - Brand Module: ✅ **DONE** (CRUD UI at `/dashboard/brands` + API)
