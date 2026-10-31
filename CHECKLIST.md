@@ -37,8 +37,7 @@ Before beginning development, all teams must jointly finalize the following foun
 | C.8 | **API/Function Interfaces** | ⚠️ **PARTIAL** | `src/lib/api.ts` (`ok`, `fail`, `serverError`) | Shared response envelopes exist, but no OpenAPI/Swagger documentation or markdown API contract file exists. |
 | C.9 | **Git Repository Structure** | ⚠️ **PARTIAL** | Git `main` branch | Git repo is structured, but `dev` and team-specific branches mentioned in `Techstack.md` are not maintained. |
 | C.10 | **UI Design Standards** | ✅ **DONE** | `design.md`, `globals.css` | Brutalist luxury design system with strict color palette (`#F0301A`, `#EFE7DC`), typography, and micro-borders. |
-| C.11 | **System Architecture** | ⚠️ **PARTIAL** | `reviewone.md`, `Techstack.md` | Documented in markdown, but missing formal architectural block diagram (Client-Server, Cloud DB, Cache, Workers). |
-| C.12 | **Testing Strategy** | ❌ **NOT DONE** | None | No formal testing strategy document outlining unit, integration, concurrency, and load testing. |
+| C.12 | **Testing Strategy** | ✅ **DONE** | `vitest.config.mts`, `tests/team1/`, `tests/team2/`, `tests/team3/`, `scripts/` | Comprehensive automated Vitest test suite (22 unit tests across 6 specs covering Teams 1, 2, 3) plus concurrency and integration scripts. |
 
 ---
 
