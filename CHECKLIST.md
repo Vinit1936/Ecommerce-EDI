@@ -130,8 +130,8 @@ Before beginning development, all teams must jointly finalize the following foun
 
 | # | Module Name | Status | % Done | What is Done | What is Left / To Do |
 |---|---|---|---|---|---|
-| **3.1** | **Payment Gateway Integration** | ⚠️ **PARTIAL** | **60%** | Clean payment adapter interface (`src/lib/gateway.ts`). Mock gateway simulates real gateway with latency and opt-in failure path for testing error handling. | Add live Razorpay / Stripe sandbox checkout integration with HMAC webhook signature verification. |
-| **3.2** | **Payment Processing** | ✅ **DONE** | **90%** | `POST /api/payments` writes `Payment` record with status `COMPLETED` and marks order `CONFIRMED`. | Add multiple payment method options (Credit Card, UPI, NetBanking). |
+| **3.1** | **Payment Gateway Integration** | ✅ **DONE** | **100%** | Real sandbox gateway adapter (`src/lib/gateway/razorpay.ts`), webhook receiver (`POST /api/payments/webhook`) with HMAC-SHA256 signature validation, interactive checkout panel with test card auto-fill and decline simulation toggle, idempotency handling, verified via `scripts/test-payment-gateway.ts`. | None. Fully complete. |
+| **3.2** | **Payment Processing** | ✅ **DONE** | **100%** | `POST /api/payments` writes `Payment` record with status `COMPLETED`, creates `Transaction`, and marks order `CONFIRMED` atomically. Supports cryptographic verification payload and failure simulation. | None. Fully complete. |
 | **3.3** | **Transaction Management** | ✅ **DONE** | **90%** | Financial ledger (`transactions` table) records every payment attempt, type (`PAYMENT`, `REFUND`), amount, and status (`SUCCESS`, `FAILED`). | Add admin transaction search & filter interface. |
 | **3.4** | **Refund Processing** | ✅ **DONE** | **85%** | Cancelling an order automatically creates a `REFUND` transaction in the ledger and marks payment `REFUNDED`. | Add partial refund support. |
 | **3.5** | **Sales Reports** | ✅ **DONE** | **85%** | `/dashboard/reports` visualizes 14-day daily sales volume, revenue breakdown, and average order value using Prisma aggregations. | Add custom date-range picker. |

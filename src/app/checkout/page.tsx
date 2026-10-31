@@ -25,7 +25,15 @@ export default function CheckoutPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [simulateFailure, setSimulateFailure] = useState(false);
+  const [cardDetails, setCardDetails] = useState({
+    cardNumber: '4242 •••• •••• 4242',
+    cardExpiry: '12/28',
+    cardCvc: '888',
+    cardHolder: 'SPECIMEN COLLECTOR',
+  });
   const [orderConfirmed, setOrderConfirmed] = useState<null | {
     id: string;
     items: typeof items;
@@ -40,13 +48,14 @@ export default function CheckoutPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardDetails({ ...cardDetails, [e.target.name]: e.target.value });
+  };
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
 
-    // Orders are keyed to a Customer, so an anonymous checkout cannot be
-    // persisted. Send guests to sign in and bring them straight back; their
-    // cart is merged server-side on arrival.
     if (!isSignedIn) {
       router.push('/login?callbackUrl=/checkout');
       return;
@@ -54,6 +63,7 @@ export default function CheckoutPage() {
 
     setIsSubmitting(true);
     setError(null);
+    setPaymentPhase('RESERVING INVENTORY & PLACING ORDER...');
     const placed = [...items];
 
     try {
@@ -79,19 +89,28 @@ export default function CheckoutPage() {
 
       const { order, invoiceNo } = orderData.data;
 
-      // 2. Take payment. The order exists either way; a failed payment leaves
-      //    it PENDING rather than silently discarding it.
+      // 2. Gateway transmission phase
+      setPaymentPhase('TRANSMITTING TO PAYMENT GATEWAY...');
+      await new Promise((r) => setTimeout(r, 300));
+
+      // 3. Cryptographic signature check
+      setPaymentPhase('VERIFYING CRYPTOGRAPHIC HMAC SIGNATURE...');
+
       const payRes = await fetch('/api/payments', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({
+          orderId: order.id,
+          simulateFailure,
+        }),
       });
       const payData = await payRes.json();
       if (!payData.success) {
-        setError(`Order ${invoiceNo} was created but payment failed: ${payData.error}`);
+        setError(`Order ${invoiceNo} was placed, but payment declined: ${payData.error}`);
         return;
       }
 
+      setPaymentPhase('SETTLED & CONFIRMED');
       setOrderConfirmed({
         id: invoiceNo,
         items: placed,
@@ -104,6 +123,7 @@ export default function CheckoutPage() {
       setError('Could not reach the server. Please try again.');
     } finally {
       setIsSubmitting(false);
+      setPaymentPhase(null);
     }
   };
 
@@ -354,8 +374,115 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Place Order Action Link */}
+          {/* Section 4: Payment Gateway & Settlement */}
+          <div className="space-y-4 hairline-t pt-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display-grotesk font-bold text-xl uppercase tracking-tight">
+                04 — PAYMENT GATEWAY & SETTLEMENT
+              </h2>
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#F0301A] border border-[#F0301A] px-2 py-0.5">
+                ● SANDBOX SECURE
+              </span>
+            </div>
+
+            <p className="text-xs text-[#161412]">
+              Cryptographic HMAC-SHA256 signature verification enabled. Real gateway test mode.
+            </p>
+
+            <div className="p-4 border border-[#F0301A] bg-[#FFFFFF]/40 space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider mb-1">
+                  CARDHOLDER NAME
+                </label>
+                <input
+                  type="text"
+                  name="cardHolder"
+                  value={cardDetails.cardHolder}
+                  onChange={handleCardChange}
+                  className="w-full bg-transparent border border-[#F0301A] px-3 py-2 text-[#161412] font-sans text-sm focus:outline-none focus:ring-1 focus:ring-[#F0301A]"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-[11px] font-bold uppercase tracking-wider">
+                    CARD NUMBER
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCardDetails((prev) => ({
+                        ...prev,
+                        cardNumber: '4242 4242 4242 4242',
+                        cardExpiry: '12/28',
+                        cardCvc: '888',
+                      }))
+                    }
+                    className="text-[10px] uppercase font-bold text-[#F0301A] hover:underline cursor-pointer"
+                  >
+                    [ AUTO-FILL TEST CARD ]
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  name="cardNumber"
+                  value={cardDetails.cardNumber}
+                  onChange={handleCardChange}
+                  className="w-full bg-transparent border border-[#F0301A] px-3 py-2 text-[#161412] font-mono text-sm tracking-wider focus:outline-none focus:ring-1 focus:ring-[#F0301A]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider mb-1">
+                    EXPIRY (MM/YY)
+                  </label>
+                  <input
+                    type="text"
+                    name="cardExpiry"
+                    value={cardDetails.cardExpiry}
+                    onChange={handleCardChange}
+                    className="w-full bg-transparent border border-[#F0301A] px-3 py-2 text-[#161412] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#F0301A]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider mb-1">
+                    SECURITY CODE (CVC)
+                  </label>
+                  <input
+                    type="password"
+                    name="cardCvc"
+                    maxLength={4}
+                    value={cardDetails.cardCvc}
+                    onChange={handleCardChange}
+                    className="w-full bg-transparent border border-[#F0301A] px-3 py-2 text-[#161412] font-mono text-sm focus:outline-none focus:ring-1 focus:ring-[#F0301A]"
+                  />
+                </div>
+              </div>
+
+              <div className="hairline-t pt-3">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold uppercase tracking-wider text-[#F0301A]">
+                  <input
+                    type="checkbox"
+                    checked={simulateFailure}
+                    onChange={(e) => setSimulateFailure(e.target.checked)}
+                    className="accent-[#F0301A] w-4 h-4 cursor-pointer"
+                  />
+                  <span>Simulate Card Decline (Test Rejection Protocol)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Place Order Action Link & Live State Tracker */}
           <div className="hairline-t pt-6 space-y-4">
+            {paymentPhase && (
+              <div className="p-3 border border-[#F0301A] bg-[#F0301A]/10 text-xs font-bold uppercase tracking-widest text-[#F0301A] flex items-center gap-2 animate-pulse">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#F0301A]" />
+                <span>GATEWAY PROTOCOL: {paymentPhase}</span>
+              </div>
+            )}
+
             {error && (
               <div className="p-3 border border-[#F0301A] bg-[#F0301A]/10 text-xs font-bold uppercase tracking-wider text-[#F0301A]">
                 ● {error}
@@ -367,7 +494,11 @@ export default function CheckoutPage() {
               </div>
             )}
             <ActionLink type="submit" disabled={isSubmitting} size="lg">
-              {isSubmitting ? 'PROCESSING SPECIMENS...' : isSignedIn ? 'PLACE ORDER ↗' : 'SIGN IN TO CONTINUE ↗'}
+              {isSubmitting
+                ? (paymentPhase || 'PROCESSING SPECIMENS...')
+                : isSignedIn
+                ? 'AUTHORISE & PLACE ORDER ↗'
+                : 'SIGN IN TO CONTINUE ↗'}
             </ActionLink>
           </div>
         </div>

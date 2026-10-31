@@ -18,6 +18,13 @@ export const dynamic = 'force-dynamic';
 const schema = z.object({
   orderId: z.string().uuid(),
   simulateFailure: z.boolean().optional(),
+  verificationInput: z
+    .object({
+      gatewayPaymentId: z.string().optional(),
+      gatewayOrderId: z.string().optional(),
+      signature: z.string().optional(),
+    })
+    .optional(),
 });
 
 export async function POST(request: Request) {
@@ -36,7 +43,11 @@ export async function POST(request: Request) {
     }
 
     const amount = Number(order.totalAmount);
-    const result = await charge(amount, parsed.data.simulateFailure ?? false);
+    const result = await charge(
+      amount,
+      parsed.data.simulateFailure ?? false,
+      parsed.data.verificationInput
+    );
 
     const { payment, transaction } = await prisma.$transaction(async (tx) => {
       const payment = await tx.payment.create({
