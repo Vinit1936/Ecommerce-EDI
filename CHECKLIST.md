@@ -28,7 +28,7 @@ Before beginning development, all teams must jointly finalize the following foun
 | # | Item | Status | Implemented In | What is Left / Notes |
 |---|---|---|---|---|
 | C.1 | **Software Requirement Specification (SRS)** | ✅ **DONE** | `docs/SRS.md` | Formal IEEE Std 830-1998 formatted SRS covering all 32 modules, 3 roles, interfaces, and 10 KPIs. |
-| C.2 | **ER Diagram** | ⚠️ **PARTIAL** | `prisma/schema.prisma` | Schema defines relationships, but no visual diagram artifact (Mermaid/PNG) exists for presentations and defense. |
+| C.2 | **ER Diagram** | ✅ **DONE** | `docs/ER_DIAGRAM.md` | Complete visual Entity-Relationship diagram in Mermaid with 16 tables, primary/foreign keys, and cardinalities. |
 | C.3 | **Database Schema** | ✅ **DONE** | `prisma/schema.prisma` | 16 PostgreSQL tables covering all 3 teams with strict FKs, constraints, and cascades. |
 | C.4 | **Table Names and Primary Keys** | ✅ **DONE** | `prisma/schema.prisma` | Consistent UUID PKs (`@default(uuid()) @db.Uuid`), snake_case table mappings (`@@map("...")`). |
 | C.5 | **Coding Standards** | ⚠️ **PARTIAL** | `eslint.config.mjs`, `tsconfig.json` | TypeScript strict mode + ESLint configured. Prettier + Husky git pre-commit hooks remain to be set up. |
@@ -186,8 +186,8 @@ The academic syllabus requires specific technical concepts demonstrated across 8
 | **Operating Systems** | Product image and file management | T1 | ✅ **DONE** | Physical disk I/O, permissions, magic-byte inspection, upload/unlink APIs, and orphan storage purge script. |
 | **Operating Systems** | Thread synchronization for concurrent order processing | T2 | ✅ **DONE** | PostgreSQL `SELECT ... FOR UPDATE` row locks acting as critical section mutex. |
 | **Operating Systems** | Backup scheduling and log management | T3 | ✅ **DONE** | Automated scheduler daemon with snapshot retention and rotation (`scripts/backup-cron.ts`). |
-| **Software Engineering** | SRS, Use Case Diagram, Class Diagram | T1 | ❌ **MISSING** | Generate `docs/SRS.md`, `docs/USE_CASE_DIAGRAM.md`, `docs/CLASS_DIAGRAM.md`. |
-| **Software Engineering** | Activity Diagram, Sequence Diagram | T2 | ❌ **MISSING** | Generate `docs/ACTIVITY_DIAGRAM.md`, `docs/SEQUENCE_DIAGRAM.md`. |
+| **Software Engineering** | SRS, Use Case Diagram, Class Diagram | T1 | ✅ **DONE** | `docs/SRS.md` and complete Mermaid diagrams in `docs/UML_DIAGRAMS.md`. |
+| **Software Engineering** | Activity Diagram, Sequence Diagram | T2 | ✅ **DONE** | Order state machine activity flowchart and concurrency sequence lifelines in `docs/UML_DIAGRAMS.md`. |
 | **Software Engineering** | Integration Testing, Documentation | T3 | ❌ **MISSING** | Generate `docs/INTEGRATION_REPORT.md`, `docs/TESTING_REPORT.md`. |
 | **Web Technology** | Login Page, Customer Dashboard, Product Catalog | T1 | ✅ **DONE** | Login, Shop, Customer Dashboard (`/account`), Vendor Portal (`/dashboard/vendor`) complete. |
 | **Web Technology** | Shopping Cart, Checkout and Order Pages | T2 | ✅ **DONE** | `/cart`, `/checkout`, `/orders`, `/orders/[id]/invoice` complete. |
