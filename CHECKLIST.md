@@ -27,7 +27,7 @@ Before beginning development, all teams must jointly finalize the following foun
 
 | # | Item | Status | Implemented In | What is Left / Notes |
 |---|---|---|---|---|
-| C.1 | **Software Requirement Specification (SRS)** | ❌ **NOT DONE** | None | Need IEEE Std 830-1998 formatted SRS covering functional & non-functional requirements (`docs/SRS.md`). |
+| C.1 | **Software Requirement Specification (SRS)** | ✅ **DONE** | `docs/SRS.md` | Formal IEEE Std 830-1998 formatted SRS covering all 32 modules, 3 roles, interfaces, and 10 KPIs. |
 | C.2 | **ER Diagram** | ⚠️ **PARTIAL** | `prisma/schema.prisma` | Schema defines relationships, but no visual diagram artifact (Mermaid/PNG) exists for presentations and defense. |
 | C.3 | **Database Schema** | ✅ **DONE** | `prisma/schema.prisma` | 16 PostgreSQL tables covering all 3 teams with strict FKs, constraints, and cascades. |
 | C.4 | **Table Names and Primary Keys** | ✅ **DONE** | `prisma/schema.prisma` | Consistent UUID PKs (`@default(uuid()) @db.Uuid`), snake_case table mappings (`@@map("...")`). |
